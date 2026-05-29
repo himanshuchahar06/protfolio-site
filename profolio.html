@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stark Holo-CAD System | Spatial Modeling Environment</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        /* Embedded styling to bridge theme changes smoothly */
+        :root {
+            --accent-glow-rgb: 6, 182, 212;
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Canvas overlays -->
+    <canvas id="vfxCanvas"></canvas>
+    <canvas id="threeCanvas"></canvas>
+
+    <!-- Main Stark HUD Grid -->
+    <div class="ui-overlay">
+        <!-- Top Title Bar -->
+        <header id="app-header" class="ui-panel">
+            <div>
+                <h1>Stark <span class="text-glow">Holo-CAD</span></h1>
+                <p>Version 8.4 // Spatial Touchless 3D Modeler</p>
+            </div>
+            <div class="diagnostic-widget">
+                <div class="diagnostic-item">SYS: <span class="diagnostic-val">ONLINE</span></div>
+                <div class="diagnostic-item" style="margin-left: 20px;">LATENCY: <span class="diagnostic-val" id="hud-latency">4ms</span></div>
+                <div class="diagnostic-item" style="margin-left: 20px;">FPS: <span class="diagnostic-val" id="hud-fps">60</span></div>
+            </div>
+        </header>
+
+        <!-- Left Controls Workspace Panel -->
+        <aside class="controls-left ui-panel">
+            <section class="control-group">
+                <h2>Interaction System</h2>
+                <div class="button-row" id="object-grid">
+                    <button class="option-btn active" data-type="object" data-value="modeling">Gesture Sculpting</button>
+                    <button class="option-btn" data-type="object" data-value="vision">Joint Telemetry</button>
+                    <button class="option-btn" data-type="object" data-value="touchless">Touchless Physics</button>
+                </div>
+            </section>
+
+            <section class="control-group">
+                <h2>CAD Base Templates</h2>
+                <div class="button-row" id="template-grid">
+                    <button class="option-btn active" data-type="template" data-value="blank">Blank Field</button>
+                    <button class="option-btn" data-type="template" data-value="reactor">Arc Reactor</button>
+                    <button class="option-btn" data-type="template" data-value="helmet">Stark Helmet</button>
+                    <button class="option-btn" data-type="template" data-value="drone">Propulsion Drone</button>
+                </div>
+            </section>
+
+            <section class="control-group">
+                <h2>Sculpt Brush shape</h2>
+                <div class="button-row" id="brush-grid">
+                    <button class="option-btn active" data-type="brush" data-value="sphere">Sphere Brush</button>
+                    <button class="option-btn" data-type="brush" data-value="box">Cube Brush</button>
+                    <button class="option-btn" data-type="brush" data-value="torus">Torus Brush</button>
+                </div>
+            </section>
+
+            <section class="control-group">
+                <h2>CAD System Actions</h2>
+                <div class="button-row">
+                    <button id="undo-btn" class="option-btn"><i class="fa-solid fa-rotate-left"></i> Undo Stroke</button>
+                    <button id="redo-btn" class="option-btn"><i class="fa-solid fa-rotate-right"></i> Redo Stroke</button>
+                    <button id="clear-btn" class="option-btn action-btn">Clear Workspace</button>
+                    <button id="export-btn" class="option-btn primary-btn">Export CAD (.OBJ)</button>
+                </div>
+            </section>
+
+            <section class="control-group">
+                <h2>Mood Colors</h2>
+                <div class="button-row" id="mood-tags">
+                    <button class="option-btn active" data-type="mood" data-value="cyan">Cyan Scanner</button>
+                    <button class="option-btn" data-type="mood" data-value="orange">Warning Orange</button>
+                    <button class="option-btn" data-type="mood" data-value="green">Matrix Green</button>
+                    <button class="option-btn" data-type="mood" data-value="magenta">Neon Magenta</button>
+                </div>
+            </section>
+        </aside>
+
+        <!-- Central Scanner Reticle UI -->
+        <div class="central-reticle">
+            <div class="reticle-ring ring-outer"></div>
+            <div class="reticle-ring ring-inner"></div>
+            <div class="crosshair"></div>
+        </div>
+
+        <!-- Right System Feedback Panel -->
+        <aside class="controls-right ui-panel">
+            <section class="control-group">
+                <h2>Webcam Spatial Input</h2>
+                <div class="webcam-panel">
+                    <video id="webcam" autoplay playsinline></video>
+                    <div class="webcam-scanner"></div>
+                </div>
+                <div class="camera-control">
+                    <button id="enable-camera-btn" class="option-btn primary-btn">
+                        Enable Camera Tracking
+                    </button>
+                </div>
+            </section>
+
+            <section class="control-group">
+                <h2>Interactive Audio Hum</h2>
+                <div class="button-row" style="margin-bottom: 8px;">
+                    <button id="toggle-audio-btn" class="option-btn action-btn">Mute Audio Synth</button>
+                </div>
+                <div class="audio-waves-container" id="visualizer-container">
+                    <!-- Dynamic audio wave bars -->
+                    <div class="audio-bar" style="height: 30%"></div>
+                    <div class="audio-bar" style="height: 55%"></div>
+                    <div class="audio-bar" style="height: 85%"></div>
+                    <div class="audio-bar" style="height: 40%"></div>
+                    <div class="audio-bar" style="height: 70%"></div>
+                    <div class="audio-bar" style="height: 90%"></div>
+                    <div class="audio-bar" style="height: 50%"></div>
+                    <div class="audio-bar" style="height: 35%"></div>
+                </div>
+            </section>
+
+            <section class="control-group">
+                <h2>Gesture Diagnostic Logs</h2>
+                <div class="console-widget" id="telemetry-console">
+                    <div class="console-line"><span class="console-timestamp">[00:00:00]</span> SYSTEM INITIALIZED. Ready for touchless input.</div>
+                    <div class="console-line"><span class="console-timestamp">[00:00:01]</span> Mouse fallback is ACTIVE. Left-click/drag to test sculpting.</div>
+                </div>
+            </section>
+        </aside>
+
+        <!-- Bottom HUD Footer -->
+        <footer class="hud-footer">
+            <div class="footer-section">
+                <div>COORD: <span class="text-glow" id="hud-coord">X: 0.00 | Y: 0.00 | Z: 0.00</span></div>
+                <div>BRUSH RADIUS: <span class="text-glow" id="hud-radius">1.50</span></div>
+            </div>
+            <div class="footer-section">
+                <div>ACTIVE GESTURE: <span class="text-glow" id="hud-gesture" style="color: #22c55e;">IDLE</span></div>
+                <div>TOTAL POLYGONS: <span class="text-glow" id="hud-polys">0</span></div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Script Block using MediaPipe Tasks Vision API -->
+    <script type="module">
+        import { HandLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0";
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('vfxCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // --- Three.js Setup ---
+            const threeCanvas = document.getElementById('threeCanvas');
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 100;
+            
+            const renderer = new THREE.WebGLRenderer({ canvas: threeCanvas, alpha: true, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            
+            const pointLight = new THREE.PointLight(0xffffff, 1.5, 300);
+            pointLight.position.set(20, 40, 50);
+            scene.add(pointLight);
+
+            // Single Central Object Group for Holo-CAD
+            const objectGroup = new THREE.Group();
+            scene.add(objectGroup);
+
+            // Workspace grid system (cyber styling)
+            const gridHelper = new THREE.GridHelper(300, 50, 0x06b6d4, 0x06b6d4);
+            gridHelper.position.y = -50;
+            gridHelper.material.opacity = 0.15;
+            gridHelper.material.transparent = true;
+            scene.add(gridHelper);
+
+            // State management
+            const state = {
+                object: 'modeling',
+                template: 'blank',
+                brush: 'sphere',
+                mood: 'cyan',
+                audioMuted: true
+            };
+
+            const holoState = { x: window.innerWidth / 2, y: window.innerHeight / 2, scale: 1 };
+            
+            // Sculpting History arrays for Undo/Redo
+            const sculptStrokes = []; // Array of THREE.Group objects (each representing a single pinch drawing session)
+            const redoStack = [];      // Array of popped THREE.Group objects for redoing
+
+            // Setup UI utility
+            const setupUI = (selector, type, callback) => {
+                const buttons = document.querySelectorAll(selector);
+                buttons.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        buttons.forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        state[type] = btn.dataset.value;
+                        if (callback) callback(btn.dataset.value);
+                    });
+                });
+            };
+
+            // Diagnostic logging console utility
+            const telemetryConsole = document.getElementById('telemetry-console');
+            const logDiagnostic = (msg) => {
+                const now = new Date();
+                const ts = now.toTimeString().split(' ')[0];
+                const line = document.createElement('div');
+                line.className = 'console-line';
+                line.innerHTML = `<span class="console-timestamp">[${ts}]</span> ${msg}`;
+                telemetryConsole.appendChild(line);
+                telemetryConsole.scrollTop = telemetryConsole.scrollHeight;
+                if (telemetryConsole.children.length > 30) {
+                    telemetryConsole.removeChild(telemetryConsole.firstChild);
+                }
+            };
+
+            // HUD UI sync elements
+            const fpsIndicator = document.getElementById('hud-fps');
+            const gestureIndicator = document.getElementById('hud-gesture');
+            const coordIndicator = document.getElementById('hud-coord');
+            const radiusIndicator = document.getElementById('hud-radius');
+            const polyIndicator = document.getElementById('hud-polys');
+
+            // --- Theme configuration based on mood ---
+            const themes = {
+                cyan: { bg: 'rgba(2, 6, 23, 0.85)', accent: '#06b6d4', accent2: '#38bdf8', rgb: '6, 182, 212' },
+                orange: { bg: 'rgba(24, 10, 2, 0.85)', accent: '#ea580c', accent2: '#f97316', rgb: '234, 88, 12' },
+                green: { bg: 'rgba(2, 20, 10, 0.85)', accent: '#16a34a', accent2: '#22c55e', rgb: '22, 163, 74' },
+                magenta: { bg: 'rgba(24, 2, 20, 0.85)', accent: '#db2777', accent2: '#ec4899', rgb: '219, 39, 119' }
+            };
+
+            const applyMood = (moodName) => {
+                const theme = themes[moodName];
+                document.documentElement.style.setProperty('--accent', theme.accent);
+                document.documentElement.style.setProperty('--ui-border', `rgba(${theme.rgb}, 0.2)`);
+                document.documentElement.style.setProperty('--ui-border-active', theme.accent);
+                document.documentElement.style.setProperty('--accent-glow-rgb', theme.rgb);
+                
+                pointLight.color.setHex(parseInt(theme.accent.replace('#', '0x')));
+                gridHelper.material.color.setHex(parseInt(theme.accent.replace('#', '0x')));
+                logDiagnostic(`HUD theme re-routed: <span class="console-accent">${moodName.toUpperCase()}</span>`);
+            };
+
+            setupUI('#object-grid .option-btn', 'object', (val) => {
+                logDiagnostic(`Interaction space shifted to: <span class="console-accent">${val}</span>`);
+                initCADBase();
+            });
+            setupUI('#template-grid .option-btn', 'template', (val) => {
+                logDiagnostic(`CAD Base Template loaded: <span class="console-accent">${val.toUpperCase()}</span>`);
+                initCADBase();
+            });
+            setupUI('#brush-grid .option-btn', 'brush', (val) => {
+                logDiagnostic(`Sculpt brush changed: <span class="console-accent">${val.toUpperCase()}</span>`);
+            });
+            setupUI('#mood-tags .option-btn', 'mood', applyMood);
+
+            // --- Web Audio API Synth Engine ---
+            let audioCtx = null;
+            let ambientOsc = null;
+            let trackingOsc = null;
+            let filterNode = null;
+            let audioGain = null;
+            let audioBars = document.querySelectorAll('.audio-bar');
+
+            const initAudioEngine = () => {
+                try {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    
+                    // Low Ambient Hum
+                    ambientOsc = audioCtx.createOscillator();
+                    ambientOsc.type = 'sawtooth';
+                    ambientOsc.frequency.setValueAtTime(55, audioCtx.currentTime); // Low A hum
+                    
+                    // Pitch Tracking Synth
+                    trackingOsc = audioCtx.createOscillator();
+                    trackingOsc.type = 'sine';
+                    trackingOsc.frequency.setValueAtTime(220, audioCtx.currentTime);
+
+                    // Cyber Resonant Low-Pass Filter
+                    filterNode = audioCtx.createBiquadFilter();
+                    filterNode.type = 'lowpass';
+                    filterNode.frequency.setValueAtTime(300, audioCtx.currentTime);
+                    filterNode.Q.setValueAtTime(8, audioCtx.currentTime);
+
+                    // Master Volume Gain
+                    audioGain = audioCtx.createGain();
+                    audioGain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+
+                    // Routing
+                    ambientOsc.connect(filterNode);
+                    trackingOsc.connect(filterNode);
+                    filterNode.connect(audioGain);
+                    audioGain.connect(audioCtx.destination);
+
+                    ambientOsc.start();
+                    trackingOsc.start();
+
+                    state.audioMuted = false;
+                    document.getElementById('toggle-audio-btn').textContent = "Mute Audio Synth";
+                    document.getElementById('toggle-audio-btn').classList.remove('action-btn');
+                    document.getElementById('toggle-audio-btn').classList.add('primary-btn');
+                    logDiagnostic("Atmospheric synth engine: CONNECTED");
+                } catch (e) {
+                    console.error("Failed to connect Web Audio API:", e);
+                    logDiagnostic("Error: Web Audio blocked by browser restrictions.");
+                }
+            };
+
+            const toggleAudio = () => {
+                if (!audioCtx) {
+                    initAudioEngine();
+                    return;
+                }
+                
+                if (state.audioMuted) {
+                    audioGain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                    state.audioMuted = false;
+                    document.getElementById('toggle-audio-btn').textContent = "Mute Audio Synth";
+                    document.getElementById('toggle-audio-btn').classList.remove('action-btn');
+                    document.getElementById('toggle-audio-btn').classList.add('primary-btn');
+                    logDiagnostic("Audio channel: EMITTING");
+                } else {
+                    audioGain.gain.setValueAtTime(0, audioCtx.currentTime);
+                    state.audioMuted = true;
+                    document.getElementById('toggle-audio-btn').textContent = "Unmute Audio Synth";
+                    document.getElementById('toggle-audio-btn').classList.remove('primary-btn');
+                    document.getElementById('toggle-audio-btn').classList.add('action-btn');
+                    logDiagnostic("Audio channel: SILENCED");
+                }
+            };
+
+            document.getElementById('toggle-audio-btn').addEventListener('click', toggleAudio);
+
+            const playFeedbackBeep = (freq, duration) => {
+                if (!audioCtx || state.audioMuted) return;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            };
+
+            // Modulate synthesizer frequencies based on active hand's coordinates
+            const modulateSynth = (yRatio, pinchActive) => {
+                if (!audioCtx || state.audioMuted) return;
+                
+                // Map screen coordinate Y to pitch frequency (200Hz - 800Hz)
+                const targetFreq = 200 + (1 - yRatio) * 600;
+                trackingOsc.frequency.setTargetAtTime(targetFreq, audioCtx.currentTime, 0.1);
+                
+                // Open up filter sweep if pinching (making a bright drawing sweep sound)
+                const targetFilterFreq = pinchActive ? 1500 : 350;
+                filterNode.frequency.setTargetAtTime(targetFilterFreq, audioCtx.currentTime, 0.15);
+            };
+
+            // CSS Soundwave bars micro-animation
+            const updateAudioBars = (pinchActive) => {
+                audioBars.forEach(bar => {
+                    let randHeight = Math.random() * 30 + 10;
+                    if (pinchActive) randHeight = Math.random() * 85 + 15;
+                    else if (state.audioMuted) randHeight = 5;
+                    bar.style.height = `${randHeight}%`;
+                });
+            };
+
+            // --- Three.js Template Wireframes ---
+            const createArcReactorMesh = () => {
+                const reactorGroup = new THREE.Group();
+                reactorGroup.name = "templateMesh";
+                
+                const themeColor = parseInt(themes[state.mood].accent.replace('#', '0x'));
+                const matWire = new THREE.MeshBasicMaterial({ color: themeColor, wireframe: true, transparent: true, opacity: 0.35 });
+                const matSolid = new THREE.MeshPhongMaterial({ color: themeColor, emissive: themeColor, emissiveIntensity: 0.5, transparent: true, opacity: 0.85 });
+
+                // Core central capsule
+                const coreGeo = new THREE.CylinderGeometry(6, 6, 12, 16);
+                const core = new THREE.Mesh(coreGeo, matWire);
+                reactorGroup.add(core);
+
+                // Outer main ring
+                const outerRingGeo = new THREE.TorusGeometry(32, 2, 8, 48);
+                const outerRing = new THREE.Mesh(outerRingGeo, matSolid);
+                reactorGroup.add(outerRing);
+
+                // Concentric inner rings
+                const innerRingGeo1 = new THREE.TorusGeometry(22, 1, 8, 36);
+                const innerRing1 = new THREE.Mesh(innerRingGeo1, matWire);
+                reactorGroup.add(innerRing1);
+
+                // Emitted glowing nodes/spokes
+                for (let i = 0; i < 10; i++) {
+                    const angle = (Math.PI * 2 / 10) * i;
+                    const spokeGeo = new THREE.BoxGeometry(2, 10, 2);
+                    const spoke = new THREE.Mesh(spokeGeo, matWire);
+                    spoke.position.set(Math.cos(angle) * 27, Math.sin(angle) * 27, 0);
+                    spoke.rotation.z = angle + Math.PI/2;
+                    reactorGroup.add(spoke);
+                }
+
+                return reactorGroup;
+            };
+
+            const createHelmetMesh = () => {
+                const helmetGroup = new THREE.Group();
+                helmetGroup.name = "templateMesh";
+
+                const themeColor = parseInt(themes[state.mood].accent.replace('#', '0x'));
+                const matWire = new THREE.MeshBasicMaterial({ color: themeColor, wireframe: true, transparent: true, opacity: 0.35 });
+                const matSolid = new THREE.MeshPhongMaterial({ color: themeColor, wireframe: true, transparent: true, opacity: 0.75 });
+
+                // Stylized dome
+                const domeGeo = new THREE.SphereGeometry(24, 8, 8, 0, Math.PI * 2, 0, Math.PI * 0.75);
+                const dome = new THREE.Mesh(domeGeo, matSolid);
+                dome.scale.set(1, 1.1, 1);
+                helmetGroup.add(dome);
+
+                // Dynamic face plate overlay (wire boxes)
+                const faceplateGeo = new THREE.BoxGeometry(16, 22, 12);
+                const faceplate = new THREE.Mesh(faceplateGeo, matWire);
+                faceplate.position.set(0, -6, 16);
+                faceplate.rotation.x = 0.15;
+                helmetGroup.add(faceplate);
+
+                // Glowing eyes slots
+                const eyeGeo = new THREE.BoxGeometry(8, 2, 2);
+                const eyeMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 });
+                const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
+                leftEye.position.set(-6, -2, 22);
+                const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
+                rightEye.position.set(6, -2, 22);
+                helmetGroup.add(leftEye, rightEye);
+
+                // Sculpted jaw
+                const jawGeo = new THREE.ConeGeometry(12, 14, 4);
+                const jaw = new THREE.Mesh(jawGeo, matSolid);
+                jaw.position.set(0, -18, 6);
+                jaw.rotation.x = -Math.PI / 1.1;
+                helmetGroup.add(jaw);
+
+                return helmetGroup;
+            };
+
+            const createDroneMesh = () => {
+                const droneGroup = new THREE.Group();
+                droneGroup.name = "templateMesh";
+
+                const themeColor = parseInt(themes[state.mood].accent.replace('#', '0x'));
+                const matWire = new THREE.MeshBasicMaterial({ color: themeColor, wireframe: true, transparent: true, opacity: 0.35 });
+                const matSolid = new THREE.MeshPhongMaterial({ color: themeColor, emissive: themeColor, emissiveIntensity: 0.2, transparent: true, opacity: 0.7 });
+
+                // Central drone base body
+                const bodyGeo = new THREE.OctahedronGeometry(12, 1);
+                const body = new THREE.Mesh(bodyGeo, matSolid);
+                droneGroup.add(body);
+
+                // Outer motor arms and rotors
+                const arms = [];
+                const rotorGroup = new THREE.Group();
+                rotorGroup.name = "rotors";
+
+                for (let i = 0; i < 4; i++) {
+                    const angle = (Math.PI / 2) * i;
+                    const armGeo = new THREE.CylinderGeometry(1.5, 1.5, 30, 8);
+                    const arm = new THREE.Mesh(armGeo, matWire);
+                    arm.position.set(Math.cos(angle) * 15, 0, Math.sin(angle) * 15);
+                    arm.rotation.x = Math.PI / 2;
+                    arm.rotation.z = angle;
+                    droneGroup.add(arm);
+
+                    // Rotor motor cap
+                    const capGeo = new THREE.CylinderGeometry(3, 3, 4, 8);
+                    const cap = new THREE.Mesh(capGeo, matSolid);
+                    cap.position.set(Math.cos(angle) * 30, 2, Math.sin(angle) * 30);
+                    droneGroup.add(cap);
+
+                    // Propeller blades
+                    const bladeGeo = new THREE.BoxGeometry(1.5, 0.2, 16);
+                    const blade = new THREE.Mesh(bladeGeo, matWire);
+                    blade.position.set(Math.cos(angle) * 30, 4, Math.sin(angle) * 30);
+                    blade.userData = { angle: angle, index: i };
+                    rotorGroup.add(blade);
+                }
+                droneGroup.add(rotorGroup);
+                return droneGroup;
+            };
+
+            // --- Re-initialize CAD Base ---
+            const initCADBase = () => {
+                const theme = themes[state.mood];
+                const accentColor = parseInt(theme.accent.replace('#', '0x'));
+
+                // Clear previous base template meshes, but preserve sculpted strokes
+                const toRemove = [];
+                objectGroup.children.forEach(obj => {
+                    if (obj.name === "templateMesh" || obj.name === "handsGroup" || obj.name === "cubesGroup") {
+                        toRemove.push(obj);
+                    }
+                });
+                toRemove.forEach(obj => {
+                    // Deep dispose child materials
+                    obj.traverse(child => {
+                        if (child.geometry) child.geometry.dispose();
+                        if (child.material) {
+                            if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+                            else child.material.dispose();
+                        }
+                    });
+                    objectGroup.remove(obj);
+                });
+
+                // Spawning visual elements based on workspace mode
+                if (state.object === 'vision') {
+                    // Vision skeleton
+                    const handsGroup = new THREE.Group();
+                    handsGroup.name = "handsGroup";
+                    const jointGeo = new THREE.SphereGeometry(1.5, 12, 12);
+                    const jointMat = new THREE.MeshPhongMaterial({ color: accentColor, emissive: accentColor, emissiveIntensity: 0.8 });
+                    const boneMat = new THREE.LineBasicMaterial({ color: parseInt(theme.accent2.replace('#', '0x')), linewidth: 2 });
+
+                    for (let h = 0; h < 2; h++) {
+                        const hand = new THREE.Group();
+                        for (let i = 0; i < 21; i++) {
+                            const joint = new THREE.Mesh(jointGeo, jointMat);
+                            joint.visible = false;
+                            hand.add(joint);
+                        }
+                        
+                        const bonesGeo = new THREE.BufferGeometry();
+                        const bonesLines = new THREE.LineSegments(bonesGeo, boneMat);
+                        bonesLines.visible = false;
+                        hand.add(bonesLines);
+                        
+                        handsGroup.add(hand);
+                    }
+                    objectGroup.add(handsGroup);
+
+                } else if (state.object === 'touchless') {
+                    // Grid repulsion cubes
+                    const cubesGroup = new THREE.Group();
+                    cubesGroup.name = "cubesGroup";
+                    const cubeGeo = new THREE.BoxGeometry(6, 6, 6);
+                    
+                    for (let x = -3; x <= 3; x++) {
+                        for (let y = -3; y <= 3; y++) {
+                            const mat = new THREE.MeshPhongMaterial({ 
+                                color: (x + y) % 2 === 0 ? accentColor : parseInt(theme.accent2.replace('#', '0x')), 
+                                transparent: true, opacity: 0.8,
+                                wireframe: (x + y) % 2 !== 0
+                            });
+                            const cube = new THREE.Mesh(cubeGeo, mat);
+                            cube.position.set(x * 14, y * 14, 0);
+                            cube.userData = { origX: x * 14, origY: y * 14, origZ: 0, vx: 0, vy: 0, vz: 0 };
+                            cubesGroup.add(cube);
+                        }
+                    }
+                    objectGroup.add(cubesGroup);
+
+                } else if (state.object === 'modeling') {
+                    // Spawn wireframe presets on modeling workspace
+                    if (state.template === 'reactor') {
+                        objectGroup.add(createArcReactorMesh());
+                    } else if (state.template === 'helmet') {
+                        objectGroup.add(createHelmetMesh());
+                    } else if (state.template === 'drone') {
+                        objectGroup.add(createDroneMesh());
+                    }
+                }
+                
+                updatePolygonCount();
+            };
+
+            // Custom dynamic brush shapes
+            const createBrushGeometry = (brushShape, size) => {
+                if (brushShape === 'box') {
+                    return new THREE.BoxGeometry(size * 1.5, size * 1.5, size * 1.5);
+                } else if (brushShape === 'torus') {
+                    return new THREE.TorusGeometry(size * 1.2, size * 0.4, 6, 16);
+                }
+                // Fallback: Sphere
+                return new THREE.SphereGeometry(size, 8, 8);
+            };
+
+            // Polygon HUD Diagnostic counter
+            const updatePolygonCount = () => {
+                let polyCount = 0;
+                objectGroup.traverse(child => {
+                    if (child.isMesh && child.geometry) {
+                        const index = child.geometry.index;
+                        const position = child.geometry.attributes.position;
+                        if (index) polyCount += index.count / 3;
+                        else if (position) polyCount += position.count / 3;
+                    }
+                });
+                polyIndicator.textContent = Math.round(polyCount);
+            };
+
+            // Spawning visual flow particles (Data Matrix HUD)
+            let dataStreams = [];
+            const emitDataStream = (x, y) => {
+                dataStreams.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 3,
+                    vy: -Math.random() * 4 - 3,
+                    life: 1.0,
+                    decay: Math.random() * 0.02 + 0.01,
+                    text: Math.random().toString(36).substring(2, 4).toUpperCase()
+                });
+            };
+
+            // Hand joints listing
+            const HAND_CONNECTIONS = [
+                [0, 1], [1, 2], [2, 3], [3, 4], // Thumb
+                [0, 5], [5, 6], [6, 7], [7, 8], // Index
+                [5, 9], [9, 10], [10, 11], [11, 12], // Middle
+                [9, 13], [13, 14], [14, 15], [15, 16], // Ring
+                [13, 17], [17, 18], [18, 19], [19, 20] // Pinky
+            ];
+
+            // --- MediaPipe Hand Tracking Setup ---
+            let handLandmarker = undefined;
+            let webcamRunning = false;
+            let lastVideoTime = -1;
+            const video = document.getElementById('webcam');
+            const enableCameraBtn = document.getElementById('enable-camera-btn');
+
+            const initializeHandLandmarker = async () => {
+                try {
+                    const vision = await FilesetResolver.forVisionTasks(
+                        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
+                    );
+                    handLandmarker = await HandLandmarker.createFromOptions(vision, {
+                        baseOptions: {
+                            modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`,
+                            delegate: "GPU"
+                        },
+                        runningMode: "VIDEO",
+                        numHands: 2
+                    });
+                    logDiagnostic("Computer Vision MediaPipe Hands: INITIALIZED");
+                } catch (error) {
+                    console.error("Error initializing HandLandmarker:", error);
+                    logDiagnostic("MediaPipe error: GPU WebGL task resolver rejected.");
+                    alert("Failed to load hand-tracking network module.");
+                }
+            };
+
+            const toggleWebcam = async () => {
+                if (!handLandmarker) {
+                    enableCameraBtn.innerHTML = "Initializing Stark AI...";
+                    enableCameraBtn.classList.add('loading');
+                    await initializeHandLandmarker();
+                    enableCameraBtn.classList.remove('loading');
+                }
+
+                if (webcamRunning) {
+                    webcamRunning = false;
+                    enableCameraBtn.innerHTML = `Enable Camera Tracking`;
+                    video.style.display = 'none';
+                    const stream = video.srcObject;
+                    if (stream) stream.getTracks().forEach(track => track.stop());
+                    logDiagnostic("Camera tracking system: DISCONNECTED");
+                } else {
+                    const constraints = { video: { width: 640, height: 480 } };
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                        video.srcObject = stream;
+                        video.style.display = 'block';
+                        
+                        video.addEventListener("loadeddata", () => {
+                            video.play().then(() => {
+                                webcamRunning = true;
+                                if (state.audioMuted) toggleAudio(); // auto initialize sound
+                            });
+                        });
+                        enableCameraBtn.innerHTML = "Disable Camera Tracking";
+                        logDiagnostic("Camera tracking system: SECURED STREAM");
+                    } catch (err) {
+                        console.error("Error accessing webcam: ", err);
+                        logDiagnostic("Camera error: Connection refused or blocked.");
+                        alert("Camera access denied or unavailable.");
+                    }
+                }
+            };
+
+            enableCameraBtn.addEventListener('click', toggleWebcam);
+
+            // Helpers to map 2D coordinates to 3D world space
+            const unprojectTo3D = (x, y, zDist) => {
+                const vec = new THREE.Vector3(
+                    (x / window.innerWidth) * 2 - 1,
+                    -(y / window.innerHeight) * 2 + 1,
+                    0.5
+                );
+                vec.unproject(camera);
+                const dir = vec.sub(camera.position).normalize();
+                return camera.position.clone().add(dir.multiplyScalar(zDist));
+            };
+
+            // Active tracking indicators
+            let width = window.innerWidth;
+            let height = window.innerHeight;
+
+            const pointers = [
+                { x: width/2, y: height/2, targetX: width/2, targetY: height/2, scale: 1.0, isVisible: true, isPinching: false, lastPinchPos: null, currentStrokeGroup: null },
+                { x: width/2, y: height/2, targetX: width/2, targetY: height/2, scale: 1.0, isVisible: false, isPinching: false, lastPinchPos: null, currentStrokeGroup: null }
+            ];
+
+            const resize = () => {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = width;
+                canvas.height = height;
+                camera.aspect = width / height;
+                camera.updateProjectionMatrix();
+                renderer.setSize(width, height);
+            };
+
+            window.addEventListener('resize', resize);
+            resize();
+
+            // Mouse Fallbacks
+            window.addEventListener('mousemove', (e) => {
+                if (!webcamRunning) {
+                    pointers[0].targetX = e.clientX;
+                    pointers[0].targetY = e.clientY;
+                    pointers[0].isVisible = true;
+                    pointers[1].isVisible = false;
+                }
+            });
+
+            // Start drawing stroke on mouse press
+            window.addEventListener('mousedown', (e) => {
+                if (!webcamRunning && state.object === 'modeling') {
+                    // Check if clicked inside left or right panels to ignore drawing
+                    if (e.clientX > 320 && e.clientX < window.innerWidth - 340 && e.clientY > 80) {
+                        pointers[0].isPinching = true;
+                        playFeedbackBeep(520, 0.08);
+                    }
+                }
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (!webcamRunning) {
+                    if (pointers[0].isPinching) {
+                        pointers[0].isPinching = false;
+                        if (pointers[0].currentStrokeGroup) {
+                            sculptStrokes.push(pointers[0].currentStrokeGroup);
+                            redoStack.length = 0; // clear redo
+                            pointers[0].currentStrokeGroup = null;
+                            logDiagnostic(`Stroke completed. Total elements in buffer: <span class="console-accent">${sculptStrokes.length}</span>`);
+                        }
+                    }
+                }
+            });
+
+            // --- Undo / Redo Sculpting functions ---
+            const undoSculpt = () => {
+                if (sculptStrokes.length > 0) {
+                    const stroke = sculptStrokes.pop();
+                    objectGroup.remove(stroke);
+                    redoStack.push(stroke);
+                    playFeedbackBeep(440, 0.1);
+                    logDiagnostic(`Undid last sculpt stroke. Redo buffer: <span class="console-accent">${redoStack.length}</span>`);
+                    updatePolygonCount();
+                } else {
+                    logDiagnostic("Sculpt history: EMPTY");
+                }
+            };
+
+            const redoSculpt = () => {
+                if (redoStack.length > 0) {
+                    const stroke = redoStack.pop();
+                    objectGroup.add(stroke);
+                    sculptStrokes.push(stroke);
+                    playFeedbackBeep(660, 0.1);
+                    logDiagnostic(`Restored stroke. History buffer: <span class="console-accent">${sculptStrokes.length}</span>`);
+                    updatePolygonCount();
+                } else {
+                    logDiagnostic("Redo history: EMPTY");
+                }
+            };
+
+            const clearWorkspace = () => {
+                sculptStrokes.forEach(stroke => objectGroup.remove(stroke));
+                sculptStrokes.length = 0;
+                redoStack.length = 0;
+                
+                // Clear active brushes if any
+                pointers.forEach(p => p.currentStrokeGroup = null);
+                
+                playFeedbackBeep(220, 0.2);
+                logDiagnostic("Workspace canvas cleared.");
+                initCADBase();
+            };
+
+            document.getElementById('undo-btn').addEventListener('click', undoSculpt);
+            document.getElementById('redo-btn').addEventListener('click', redoSculpt);
+            document.getElementById('clear-btn').addEventListener('click', clearWorkspace);
+
+            // --- Client-Side OBJ Exporter ---
+            const exportToOBJ = () => {
+                if (sculptStrokes.length === 0) {
+                    alert("No sculpted CAD mesh items found to export.");
+                    logDiagnostic("OBJ exporter failed: Empty scene.");
+                    return;
+                }
+
+                let objText = "# Stark Holo-CAD Spatial Model Export\n";
+                objText += "# Generated in real-time touchless 3D space\n\n";
+
+                let vertexCount = 1;
+
+                // Loop through each sculpted stroke group
+                sculptStrokes.forEach((strokeGroup, groupIdx) => {
+                    objText += `g SculptGroup_${groupIdx}\n`;
+                    
+                    strokeGroup.children.forEach(mesh => {
+                        if (!mesh.isMesh || !mesh.geometry) return;
+                        
+                        const geom = mesh.geometry.clone();
+                        // Transform geometry vertices by the mesh's global coordinates
+                        mesh.updateMatrixWorld(true);
+                        geom.applyMatrix4(mesh.matrixWorld);
+                        
+                        const posAttr = geom.attributes.position;
+                        if (!posAttr) return;
+
+                        // Write vertices
+                        for (let i = 0; i < posAttr.count; i++) {
+                            objText += `v ${posAttr.getX(i).toFixed(4)} ${posAttr.getY(i).toFixed(4)} ${posAttr.getZ(i).toFixed(4)}\n`;
+                        }
+
+                        // Write face indices
+                        const indexAttr = geom.index;
+                        if (indexAttr) {
+                            for (let i = 0; i < indexAttr.count; i += 3) {
+                                const a = indexAttr.getX(i) + vertexCount;
+                                const b = indexAttr.getX(i+1) + vertexCount;
+                                const c = indexAttr.getX(i+2) + vertexCount;
+                                objText += `f ${a} ${b} ${c}\n`;
+                            }
+                        } else {
+                            // Non-indexed geometry
+                            for (let i = 0; i < posAttr.count; i += 3) {
+                                objText += `f ${i + vertexCount} ${i + 1 + vertexCount} ${i + 2 + vertexCount}\n`;
+                            }
+                        }
+
+                        vertexCount += posAttr.count;
+                        geom.dispose();
+                    });
+                });
+
+                // Generate file download link
+                const blob = new Blob([objText], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `STARK_HOLO_CAD_${Date.now()}.obj`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                playFeedbackBeep(880, 0.15);
+                logDiagnostic("OBJ File packet generated and successfully downloaded.");
+            };
+
+            document.getElementById('export-btn').addEventListener('click', exportToOBJ);
+
+            // --- Performance Management diagnostic ---
+            let frameCount = 0;
+            let lastFpsTime = performance.now();
+
+            let currentLandmarks = null;
+
+            // --- Main Unified Render Loop ---
+            const render = () => {
+                const theme = themes[state.mood];
+                const zDist = 100;
+                
+                // Track FPS
+                frameCount++;
+                const nowTime = performance.now();
+                if (nowTime > lastFpsTime + 1000) {
+                    const fps = Math.round((frameCount * 1000) / (nowTime - lastFpsTime));
+                    fpsIndicator.textContent = fps;
+                    frameCount = 0;
+                    lastFpsTime = nowTime;
+                }
+
+                // Process media webcam landmarks
+                if (webcamRunning && handLandmarker && video.readyState >= 2 && video.currentTime !== lastVideoTime) {
+                    lastVideoTime = video.currentTime;
+                    const results = handLandmarker.detectForVideo(video, performance.now());
+                    currentLandmarks = results.landmarks;
+
+                    if (results.landmarks && results.landmarks.length > 0) {
+                        for (let h = 0; h < 2; h++) {
+                            const ptr = pointers[h];
+                            if (h < results.landmarks.length) {
+                                ptr.isVisible = true;
+                                const marks = results.landmarks[h];
+                                
+                                const trackingMark = marks[9]; // Middle palm joint
+                                const targetX = (1 - trackingMark.x) * window.innerWidth;
+                                const targetY = trackingMark.y * window.innerHeight;
+                                
+                                ptr.targetX += (targetX - ptr.targetX) * 0.4;
+                                ptr.targetY += (targetY - ptr.targetY) * 0.4;
+
+                                // Gesture detection: index & thumb spacing = pinch
+                                const thumbTip = marks[4];
+                                const indexTip = marks[8];
+                                const dx = thumbTip.x - indexTip.x;
+                                const dy = thumbTip.y - indexTip.y;
+                                const dist = Math.sqrt(dx*dx + dy*dy);
+                                
+                                const prevPinch = ptr.isPinching;
+                                ptr.isPinching = dist < 0.05; // Pinch thresh
+                                
+                                // Map pinch relative spacing to Brush scale factor
+                                ptr.scale = Math.max(0.5, Math.min(dist * 35.0, 5.0));
+
+                                // Stroke boundary logs
+                                if (state.object === 'modeling') {
+                                    if (ptr.isPinching && !prevPinch) {
+                                        playFeedbackBeep(520, 0.05);
+                                        logDiagnostic(`Touchless stroke started via Hand_${h}`);
+                                    } else if (!ptr.isPinching && prevPinch) {
+                                        if (ptr.currentStrokeGroup) {
+                                            sculptStrokes.push(ptr.currentStrokeGroup);
+                                            redoStack.length = 0;
+                                            ptr.currentStrokeGroup = null;
+                                            logDiagnostic(`Touchless stroke completed via Hand_${h}`);
+                                        }
+                                    }
+                                }
+                            } else {
+                                ptr.isVisible = false;
+                                if (ptr.isPinching) {
+                                    ptr.isPinching = false;
+                                    if (ptr.currentStrokeGroup) {
+                                        sculptStrokes.push(ptr.currentStrokeGroup);
+                                        ptr.currentStrokeGroup = null;
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        pointers.forEach(p => {
+                            p.isVisible = false;
+                            if (p.isPinching) {
+                                p.isPinching = false;
+                                if (p.currentStrokeGroup) {
+                                    sculptStrokes.push(p.currentStrokeGroup);
+                                    p.currentStrokeGroup = null;
+                                }
+                            }
+                        });
+                    }
+                }
+
+                // 2D particle decay leak fix
+                ctx.fillStyle = theme.bg;
+                ctx.fillRect(0, 0, width, height);
+                ctx.globalCompositeOperation = 'lighter';
+
+                // Emit 2D bones and HUD joints on webcam layer
+                if (webcamRunning && currentLandmarks && currentLandmarks.length > 0) {
+                    currentLandmarks.forEach(marks => {
+                        ctx.strokeStyle = `rgba(${theme.rgb}, 0.35)`;
+                        ctx.fillStyle = theme.accent2;
+                        ctx.lineWidth = 1.5;
+                        ctx.shadowBlur = 8;
+                        ctx.shadowColor = theme.accent;
+
+                        ctx.beginPath();
+                        for (const [startIdx, endIdx] of HAND_CONNECTIONS) {
+                            const start = marks[startIdx];
+                            const end = marks[endIdx];
+                            ctx.moveTo((1 - start.x) * width, start.y * height);
+                            ctx.lineTo((1 - end.x) * width, end.y * height);
+                        }
+                        ctx.stroke();
+
+                        marks.forEach(m => {
+                            ctx.beginPath();
+                            ctx.arc((1 - m.x) * width, m.y * height, 3, 0, Math.PI * 2);
+                            ctx.fill();
+                        });
+                    });
+                }
+
+                // Interaction controls positioning
+                let visiblePointers = pointers.filter(p => p.isVisible);
+                let centerTargetX = holoState.x;
+                let centerTargetY = holoState.y;
+                let holoTargetScale = holoState.scale;
+
+                if (visiblePointers.length === 1) {
+                    centerTargetX = visiblePointers[0].x;
+                    centerTargetY = visiblePointers[0].y;
+                    
+                    // Modulate audio synthesizer frequency based on active tracking pointer height
+                    modulateSynth(centerTargetY / window.innerHeight, visiblePointers[0].isPinching);
+                    updateAudioBars(visiblePointers[0].isPinching);
+                    
+                    gestureIndicator.textContent = visiblePointers[0].isPinching ? "SCULPTING (PINCH)" : "IDLE (TRACKING)";
+                    gestureIndicator.style.color = visiblePointers[0].isPinching ? theme.accent : "#22c55e";
+                    
+                    // brush indicator update
+                    radiusIndicator.textContent = visiblePointers[0].scale.toFixed(2);
+                } else if (visiblePointers.length === 2) {
+                    centerTargetX = (visiblePointers[0].x + visiblePointers[1].x) / 2;
+                    centerTargetY = (visiblePointers[0].y + visiblePointers[1].y) / 2;
+                    
+                    // Dual hand relative zoom distance scaling
+                    const dx = visiblePointers[0].x - visiblePointers[1].x;
+                    const dy = visiblePointers[0].y - visiblePointers[1].y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    
+                    holoTargetScale = dist / 180;
+                    holoTargetScale = Math.max(0.4, Math.min(holoTargetScale, 3.0));
+
+                    gestureIndicator.textContent = "ROTATING (PALM DUAL)";
+                    gestureIndicator.style.color = "#a855f7";
+                } else {
+                    gestureIndicator.textContent = "IDLE";
+                    gestureIndicator.style.color = "#94a3b8";
+                    updateAudioBars(false);
+                }
+
+                holoState.x += (centerTargetX - holoState.x) * 0.15;
+                holoState.y += (centerTargetY - holoState.y) * 0.15;
+                holoState.scale += (holoTargetScale - holoState.scale) * 0.15;
+
+                // Position 3D Central group
+                const center3D = unprojectTo3D(holoState.x, holoState.y, zDist);
+                objectGroup.position.copy(center3D);
+                objectGroup.scale.set(holoState.scale, holoState.scale, holoState.scale);
+
+                // HUD coordinate updates
+                coordIndicator.textContent = `X: ${center3D.x.toFixed(2)} | Y: ${center3D.y.toFixed(2)} | Z: ${center3D.z.toFixed(2)}`;
+
+                // --- 3D Interactions ---
+                if (state.object === 'touchless') {
+                    const cubesGroup = objectGroup.getObjectByName("cubesGroup");
+                    if (cubesGroup) {
+                        cubesGroup.children.forEach(cube => {
+                            let forceX = 0, forceY = 0, forceZ = 0;
+                            
+                            pointers.forEach(ptr => {
+                                if (ptr.isVisible) {
+                                    const p3d = unprojectTo3D(ptr.x, ptr.y, zDist);
+                                    objectGroup.worldToLocal(p3d);
+                                    
+                                    const dx = cube.position.x - p3d.x;
+                                    const dy = cube.position.y - p3d.y;
+                                    const dz = cube.position.z - p3d.z;
+                                    const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
+                                    
+                                    if (dist < 40) {
+                                        const force = (40 - dist) / 40;
+                                        forceX += (dx / dist) * force * 4.5;
+                                        forceY += (dy / dist) * force * 4.5;
+                                        forceZ += (dz / dist) * force * 4.5;
+                                    }
+                                }
+                            });
+
+                            // Spring tension restores cubes back to anchor coordinate
+                            forceX += (cube.userData.origX - cube.position.x) * 0.06;
+                            forceY += (cube.userData.origY - cube.position.y) * 0.06;
+                            forceZ += (cube.userData.origZ - cube.position.z) * 0.06;
+
+                            cube.userData.vx = (cube.userData.vx + forceX) * 0.75;
+                            cube.userData.vy = (cube.userData.vy + forceY) * 0.75;
+                            cube.userData.vz = (cube.userData.vz + forceZ) * 0.75;
+
+                            cube.position.x += cube.userData.vx;
+                            cube.position.y += cube.userData.vy;
+                            cube.position.z += cube.userData.vz;
+
+                            cube.rotation.x += cube.userData.vy * 0.12;
+                            cube.rotation.y += cube.userData.vx * 0.12;
+                        });
+                    }
+                } else if (state.object === 'vision') {
+                    const handsGroup = objectGroup.getObjectByName("handsGroup");
+                    if (handsGroup) {
+                        if (currentLandmarks && currentLandmarks.length > 0) {
+                            for (let h = 0; h < 2; h++) {
+                                const handObj = handsGroup.children[h];
+                                if (h < currentLandmarks.length) {
+                                    const marks = currentLandmarks[h];
+                                    const bonePoints = [];
+                                    
+                                    for (let i = 0; i < 21; i++) {
+                                        const joint = handObj.children[i];
+                                        joint.visible = true;
+                                        const hx = (0.5 - marks[i].x) * 140;
+                                        const hy = -(marks[i].y - 0.5) * 140;
+                                        const hz = marks[i].z * -140;
+                                        joint.position.lerp(new THREE.Vector3(hx, hy, hz), 0.4);
+                                    }
+                                    
+                                    const bonesLines = handObj.children[21];
+                                    for (const [startIdx, endIdx] of HAND_CONNECTIONS) {
+                                        bonePoints.push(
+                                            handObj.children[startIdx].position.x, handObj.children[startIdx].position.y, handObj.children[startIdx].position.z,
+                                            handObj.children[endIdx].position.x, handObj.children[endIdx].position.y, handObj.children[endIdx].position.z
+                                        );
+                                    }
+                                    bonesLines.geometry.setAttribute('position', new THREE.Float32BufferAttribute(bonePoints, 3));
+                                    bonesLines.visible = true;
+                                } else {
+                                    for (let i = 0; i < 21; i++) handObj.children[i].visible = false;
+                                    handObj.children[21].visible = false;
+                                }
+                            }
+                        } else {
+                            for (let h = 0; h < 2; h++) {
+                                const handObj = handsGroup.children[h];
+                                for (let i = 0; i < 21; i++) handObj.children[i].visible = false;
+                                handObj.children[21].visible = false;
+                            }
+                        }
+                        handsGroup.rotation.y += 0.005;
+                    }
+                } else if (state.object === 'modeling') {
+                    // Sculpting mode drawing actions
+                    const accentColor = parseInt(theme.accent.replace('#', '0x'));
+                    
+                    pointers.forEach(ptr => {
+                        if (ptr.isVisible && ptr.isPinching) {
+                            const p3d = unprojectTo3D(ptr.x, ptr.y, zDist);
+                            objectGroup.worldToLocal(p3d);
+                            
+                            // Initialize new stroke group on active pinch
+                            if (!ptr.currentStrokeGroup) {
+                                ptr.currentStrokeGroup = new THREE.Group();
+                                objectGroup.add(ptr.currentStrokeGroup);
+                            }
+                            
+                            // Only emit meshes if spacing triggers delta
+                            if (!ptr.lastPinchPos || ptr.lastPinchPos.distanceTo(p3d) > 2.0) {
+                                const geom = createBrushGeometry(state.brush, ptr.scale);
+                                const mat = new THREE.MeshPhongMaterial({ 
+                                    color: accentColor, 
+                                    emissive: accentColor, 
+                                    emissiveIntensity: 0.35, 
+                                    shininess: 90 
+                                });
+                                const element = new THREE.Mesh(geom, mat);
+                                element.position.copy(p3d);
+                                
+                                // Random structural variations on torus
+                                if (state.brush === 'torus') {
+                                    element.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, 0);
+                                }
+                                
+                                ptr.currentStrokeGroup.add(element);
+                                ptr.lastPinchPos = p3d.clone();
+                                
+                                updatePolygonCount();
+                            }
+                        } else {
+                            ptr.lastPinchPos = null;
+                        }
+                    });
+
+                    // Spin templates
+                    const baseTemplate = objectGroup.getObjectByName("templateMesh");
+                    if (baseTemplate) {
+                        baseTemplate.rotation.y += 0.005;
+                        
+                        // Rotors update on Prop Drone
+                        const rotors = baseTemplate.getObjectByName("rotors");
+                        if (rotors) {
+                            rotors.children.forEach(r => {
+                                r.rotation.y += 0.3; // Spin props!
+                            });
+                        }
+                    }
+                    
+                    // Slow rotation on active sculpt to admire the 3D depth
+                    if (visiblePointers.length === 2) {
+                        // Let two hands rotate the sculpt group together
+                        const dx = visiblePointers[0].x - visiblePointers[1].x;
+                        const dy = visiblePointers[0].y - visiblePointers[1].y;
+                        objectGroup.rotation.y = Math.atan2(dy, dx);
+                    } else {
+                        // Standard slow orbit
+                        objectGroup.rotation.y += 0.002;
+                    }
+                }
+
+                // Render 2D Projection emitter VFX overlay
+                pointers.forEach(ptr => {
+                    if (!ptr.isVisible) return;
+                    
+                    ptr.x += (ptr.targetX - ptr.x) * 0.2;
+                    ptr.y += (ptr.targetY - ptr.y) * 0.2;
+
+                    ctx.strokeStyle = theme.accent;
+                    ctx.shadowColor = theme.accent;
+                    ctx.shadowBlur = 12;
+                    ctx.lineWidth = 1.5;
+
+                    // Stark HUD Concentric Scanning circles
+                    ctx.save();
+                    ctx.translate(ptr.x, ptr.y);
+                    
+                    const angle = performance.now() / 800;
+                    ctx.rotate(angle);
+                    ctx.setLineDash([6, 12, 18, 6]);
+                    ctx.beginPath();
+                    ctx.arc(0, 0, ptr.scale * 12 + 10, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    ctx.rotate(-angle * 2.2);
+                    ctx.setLineDash([]);
+                    ctx.beginPath();
+                    ctx.arc(0, 0, ptr.scale * 8 + 4, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    ctx.restore();
+
+                    // Generate ascending matrix/binary data strings
+                    if (Math.random() < 0.15) emitDataStream(ptr.x, ptr.y);
+                });
+
+                // Draw and garbage collect matrix data streams (NO MEMORY LEAKS)
+                ctx.font = "9px 'Share Tech Mono', monospace";
+                ctx.textAlign = "center";
+                for (let i = dataStreams.length - 1; i >= 0; i--) {
+                    const ds = dataStreams[i];
+                    ds.x += ds.vx;
+                    ds.y += ds.vy;
+                    ds.life -= ds.decay;
+
+                    if (ds.life <= 0) {
+                        dataStreams.splice(i, 1);
+                    } else {
+                        ctx.globalAlpha = ds.life;
+                        ctx.fillStyle = theme.accent;
+                        ctx.fillText(ds.text, ds.x, ds.y);
+                    }
+                }
+                ctx.globalAlpha = 1.0;
+                ctx.globalCompositeOperation = 'source-over';
+
+                // Clear shadow states for normal UI overlay bounds
+                ctx.shadowBlur = 0;
+
+                renderer.render(scene, camera);
+                requestAnimationFrame(render);
+            };
+
+            // Run initial template trigger
+            applyMood('cyan');
+            initCADBase();
+            render();
+        });
+    </script>
+</body>
+</html>
