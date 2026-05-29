@@ -21,7 +21,7 @@
 <meta name="twitter:description" content="An elite, client-side academic dashboard featuring a Universal CGPA Calculator, class Timetable Maker, Pomodoro Study Planner, and Aura AI Academic Advisor.">
 
 <!-- Google Fonts: Outfit (modern geometric sans) and DM Serif Display -->
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Caveat:wght@400;500;600;700&family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
 <style>
   /* -----------------------------------------
      Premium Reset & Color Variables
@@ -30,70 +30,38 @@
     box-sizing: border-box; 
     margin: 0; 
     padding: 0; 
-    font-family: 'Outfit', sans-serif; 
   }
 
   :root {
-    --bg: #ffffff;
-    --surface-glass: rgba(255, 255, 255, 0.78);
-    --surface-glass-active: rgba(255, 255, 255, 0.92);
-    --border-glass: rgba(0, 0, 0, 0.08);
-    --border-glass-glow: rgba(124, 58, 237, 0.2); /* Deep violet glow */
+    --bg: #06070c;
+    --surface-glass: rgba(16, 20, 30, 0.65);
+    --surface-glass-active: rgba(24, 30, 46, 0.82);
+    --border-glass: rgba(255, 255, 255, 0.08);
+    --border-glass-glow: rgba(139, 92, 246, 0.25); /* Violet glow */
     
-    --accent: #7c3aed; /* Deep satisfying contrast purple */
-    --accent-glow: rgba(124, 58, 237, 0.08);
-    --accent-secondary: #6d28d9; /* Royal violet */
+    --accent: #a78bfa; /* Highly satisfying pastel purple/violet */
+    --accent-glow: rgba(167, 139, 250, 0.12);
+    --accent-secondary: #8b5cf6; /* Royal violet */
     
-    --accent-green: #059669; /* Deep emerald contrast success */
-    --accent-green-glow: rgba(5, 150, 105, 0.08);
+    --accent-green: #34d399; /* Refreshing pastel emerald */
+    --accent-green-glow: rgba(52, 211, 153, 0.12);
     
-    --accent-blue: #8b5cf6; /* Vibrant lavender contrast */
-    --accent-blue-glow: rgba(139, 92, 246, 0.08);
+    --accent-blue: #38bdf8; /* Modern satisfying cyan/sky blue */
+    --accent-blue-glow: rgba(56, 189, 248, 0.12);
     
-    --accent-purple: #8b5cf6;
-    --accent-purple-glow: rgba(139, 92, 246, 0.08);
+    --accent-purple: #c084fc; /* Vibrant violet-lavender */
+    --accent-purple-glow: rgba(192, 132, 252, 0.12);
     
-    --accent-gold: #d97706; /* Deep warm contrast gold */
-    --accent-gold-glow: rgba(217, 119, 6, 0.08);
+    --accent-gold: #f59e0b; /* Satisfying bright warm gold */
+    --accent-gold-glow: rgba(245, 158, 11, 0.12);
     
-    --text-primary: #0f172a; /* High-contrast slate black text */
-    --text-secondary: #334155; /* Slate grey secondary text */
-    --text-muted: #64748b; /* Slate muted grey */
+    --text-primary: #f8fafc; /* Pristine high-contrast white */
+    --text-secondary: #cbd5e1; /* Clean soft slate gray */
+    --text-muted: #64748b; /* Soft muted charcoal */
     
-    --danger: #e11d48; /* Deep rose contrast */
-    --danger-glow: rgba(225, 29, 72, 0.08);
-    --danger-accent: #be123c;
-  }
-
-  /* -----------------------------------------
-     Expressive Cursive Classes
-     ----------------------------------------- */
-  .cursive-font {
-    font-family: 'Caveat', 'Dancing Script', cursive, sans-serif !important;
-  }
-  
-  .quote-text {
-    font-family: 'Caveat', 'Dancing Script', cursive, sans-serif !important;
-    font-size: 22px !important;
-    line-height: 1.35;
-  }
-
-  .chat-bubble.bot {
-    font-family: 'Caveat', 'Dancing Script', cursive, sans-serif !important;
-    font-size: 19px !important;
-    line-height: 1.35;
-  }
-
-  .chat-bubble.user {
-    font-family: 'Caveat', 'Dancing Script', cursive, sans-serif !important;
-    font-size: 19px !important;
-    line-height: 1.35;
-  }
-
-  #mainHeaderSub {
-    font-family: 'Caveat', 'Dancing Script', cursive, sans-serif !important;
-    font-size: 32px !important;
-    font-weight: 700 !important;
+    --danger: #fb7185; /* Soft visual rose red */
+    --danger-glow: rgba(251, 113, 133, 0.12);
+    --danger-accent: #f43f5e;
   }
 
   body {
@@ -124,7 +92,7 @@
     position: fixed;
     border-radius: 50%;
     filter: blur(140px);
-    opacity: 0.06;
+    opacity: 0.14;
     z-index: -1;
     pointer-events: none;
     animation: drift 28s infinite alternate ease-in-out;
@@ -141,7 +109,7 @@
   .bleed-2 {
     width: 550px;
     height: 550px;
-    background: var(--accent-purple);
+    background: var(--accent-blue);
     bottom: -180px;
     right: -120px;
     animation-delay: -12s;
@@ -175,7 +143,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    background: rgba(0, 0, 0, 0.02);
+    background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--border-glass);
     color: var(--text-secondary);
     font-family: 'Outfit', sans-serif;
@@ -213,7 +181,7 @@
   .tool-navigation {
     display: flex;
     justify-content: center;
-    background: rgba(0, 0, 0, 0.02);
+    background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--border-glass);
     border-radius: 99px;
     padding: 6px;
@@ -246,7 +214,7 @@
   }
   .nav-btn:hover:not(.active) {
     color: var(--text-primary);
-    background: rgba(0, 0, 0, 0.02);
+    background: rgba(255, 255, 255, 0.03);
   }
 
   /* -----------------------------------------
@@ -328,8 +296,8 @@
     position: absolute;
     width: 50px;
     height: 50px;
-    background: linear-gradient(135deg, rgba(124, 58, 237, 0.12), rgba(124, 58, 237, 0.03));
-    border: 1.5px solid rgba(124, 58, 237, 0.3);
+    background: linear-gradient(135deg, rgba(167, 139, 250, 0.2), rgba(139, 92, 246, 0.05));
+    border: 1.5px solid rgba(167, 139, 250, 0.4);
     box-shadow: 0 0 15px rgba(167, 139, 250, 0.15);
     backdrop-filter: blur(4px);
     display: flex;
@@ -380,7 +348,7 @@
   }
 
   h1 {
-    font-family: 'Outfit', sans-serif;
+    font-family: 'DM Serif Display', serif;
     font-size: clamp(2.4rem, 6.5vw, 3.8rem);
     font-weight: 400; 
     line-height: 1.15;
@@ -435,7 +403,7 @@
     margin-bottom: 6px;
   }
   .quote-text {
-    font-family: 'Outfit', sans-serif;
+    font-family: 'DM Serif Display', serif;
     font-size: 16px;
     line-height: 1.4;
     font-style: italic;
@@ -473,7 +441,7 @@
     padding: 2.25rem;
     margin-bottom: 1.5rem;
     backdrop-filter: blur(20px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
     transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), 
                 box-shadow 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), 
                 border-color 0.3s;
@@ -529,7 +497,7 @@
     transition: background 0.2s, transform 0.2s;
   }
   .subjects-table tbody tr:hover {
-    background: rgba(0, 0, 0, 0.01);
+    background: rgba(255, 255, 255, 0.015);
   }
 
   /* Premium inputs & select overlays */
@@ -546,7 +514,7 @@
     border-radius: 8px;
   }
   .subjects-table input:focus, .subjects-table select:focus {
-    background: rgba(0, 0, 0, 0.03);
+    background: rgba(0, 0, 0, 0.25);
     border-color: var(--border-glass-glow);
     box-shadow: 0 0 10px rgba(167, 139, 250, 0.08);
   }
@@ -614,7 +582,7 @@
     align-items: center; 
     justify-content: center;
     gap: 8px;
-    background: rgba(0, 0, 0, 0.01); 
+    background: rgba(255, 255, 255, 0.02); 
     border: 1.5px dashed rgba(255, 255, 255, 0.08);
     color: var(--text-secondary); 
     font-family: 'Outfit', sans-serif;
@@ -644,7 +612,7 @@
     margin-bottom: 2rem;
   }
   .result-card {
-    background: rgba(0, 0, 0, 0.01); 
+    background: rgba(255, 255, 255, 0.02); 
     border: 1px solid var(--border-glass);
     border-radius: 16px;
     padding: 1.5rem; 
@@ -665,7 +633,7 @@
     margin-bottom: 8px; 
   }
   .result-value { 
-    font-family: 'Outfit', sans-serif; 
+    font-family: 'DM Serif Display', serif; 
     font-size: 2.6rem; 
     line-height: 1.1; 
   }
@@ -697,7 +665,7 @@
   }
   .grade-bar-track { 
     height: 12px; 
-    background: rgba(0, 0, 0, 0.02); 
+    background: rgba(255, 255, 255, 0.03); 
     border-radius: 99px; 
     overflow: hidden; 
     border: 1px solid rgba(255, 255, 255, 0.05);
@@ -770,7 +738,7 @@
     box-shadow: 0 8px 25px rgba(167, 139, 250, 0.4);
   }
   .btn-ghost { 
-    background: rgba(0, 0, 0, 0.01); 
+    background: rgba(255, 255, 255, 0.02); 
     color: var(--text-secondary); 
     border-color: var(--border-glass); 
   }
@@ -806,7 +774,7 @@
     margin-top: 3px; 
   }
   .history-cgpa { 
-    font-family: 'Outfit', sans-serif; 
+    font-family: 'DM Serif Display', serif; 
     font-size: 1.6rem; 
     text-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
   }
@@ -828,7 +796,7 @@
     margin-bottom: 2rem;
   }
   .timetable-form select, .timetable-form input {
-    background: rgba(0, 0, 0, 0.03);
+    background: rgba(0, 0, 0, 0.25);
     border: 1px solid var(--border-glass);
     border-radius: 10px;
     padding: 10px 14px;
@@ -848,7 +816,7 @@
     margin-bottom: 2rem;
   }
   .day-column {
-    background: rgba(0, 0, 0, 0.01);
+    background: rgba(255, 255, 255, 0.015);
     border: 1px solid var(--border-glass);
     border-radius: 16px;
     padding: 1.25rem;
@@ -866,7 +834,7 @@
   }
   .class-slot {
     border-left: 3px solid var(--accent);
-    background: rgba(0, 0, 0, 0.01);
+    background: rgba(255, 255, 255, 0.02);
     padding: 10px 12px;
     border-radius: 8px;
     margin-bottom: 10px;
@@ -929,7 +897,7 @@
   }
   .task-input {
     flex: 1;
-    background: rgba(0, 0, 0, 0.03);
+    background: rgba(0, 0, 0, 0.25);
     border: 1px solid var(--border-glass);
     border-radius: 12px;
     padding: 12px 16px;
@@ -962,7 +930,7 @@
   }
   .prio-dot.high { background: var(--danger); }
   .prio-dot.med { background: var(--accent-gold); }
-  .prio-dot.low { background: var(--accent-purple); }
+  .prio-dot.low { background: var(--accent-blue); }
 
   .task-item {
     display: flex;
@@ -1038,7 +1006,7 @@
     transition: border-color 0.5s;
   }
   .pomo-time {
-    font-family: 'Outfit', sans-serif;
+    font-family: 'DM Serif Display', serif;
     font-size: 3rem;
     line-height: 1.1;
     color: var(--text-primary);
@@ -1083,7 +1051,7 @@
     transform: translateY(0);
   }
   .modal-title {
-    font-family: 'Outfit', sans-serif;
+    font-family: 'DM Serif Display', serif;
     font-size: 24px;
     color: var(--text-primary);
     margin-bottom: 8px;
@@ -1096,7 +1064,7 @@
   }
   .modal-input {
     width: 100%;
-    background: rgba(0, 0, 0, 0.04);
+    background: rgba(0, 0, 0, 0.3);
     border: 1px solid var(--border-glass);
     border-radius: 12px;
     padding: 14px;
@@ -1156,8 +1124,8 @@
     bottom: 24px;
     width: 480px;
     height: calc(100vh - 48px);
-    background: rgba(255, 255, 255, 0.98);
-    border: 1px solid rgba(124, 58, 237, 0.2);
+    background: rgba(14, 18, 29, 0.96);
+    border: 1px solid rgba(167, 139, 250, 0.2);
     border-radius: 20px;
     box-shadow: -10px 0 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(167, 139, 250, 0.15);
     z-index: 1000;
@@ -1228,7 +1196,7 @@
     max-width: 85%;
   }
   .chat-bubble.bot {
-    background: rgba(0, 0, 0, 0.02);
+    background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--border-glass);
     color: var(--text-primary);
     align-self: flex-start;
@@ -1236,7 +1204,7 @@
   }
   .chat-bubble.user {
     background: var(--accent-glow);
-    border: 1px solid rgba(124, 58, 237, 0.2);
+    border: 1px solid rgba(167, 139, 250, 0.2);
     color: var(--accent);
     align-self: flex-end;
     border-bottom-right-radius: 4px;
@@ -1249,7 +1217,7 @@
     padding: 0 24px 18px;
   }
   .ai-suggest-chip {
-    background: rgba(0, 0, 0, 0.01);
+    background: rgba(255, 255, 255, 0.02);
     border: 1px solid var(--border-glass);
     border-radius: 12px;
     padding: 12px 16px;
@@ -1272,11 +1240,11 @@
     padding: 16px 24px;
     display: flex;
     gap: 10px;
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(6, 7, 12, 0.45);
   }
   .ai-chat-input {
     flex: 1;
-    background: rgba(0, 0, 0, 0.03);
+    background: rgba(0, 0, 0, 0.25);
     border: 1px solid var(--border-glass);
     border-radius: 12px;
     padding: 12px 18px;
@@ -1354,38 +1322,7 @@
      PDF Printable View / Save Layout Styles
      ----------------------------------------- */
   @media print {
-    /* -----------------------------------------
-     Expressive Cursive Classes
-     ----------------------------------------- */
-  .cursive-font {
-    font-family: 'Caveat', 'Dancing Script', cursive, sans-serif !important;
-  }
-  
-  .quote-text {
-    font-family: 'Caveat', 'Dancing Script', cursive, sans-serif !important;
-    font-size: 22px !important;
-    line-height: 1.35;
-  }
-
-  .chat-bubble.bot {
-    font-family: 'Caveat', 'Dancing Script', cursive, sans-serif !important;
-    font-size: 19px !important;
-    line-height: 1.35;
-  }
-
-  .chat-bubble.user {
-    font-family: 'Caveat', 'Dancing Script', cursive, sans-serif !important;
-    font-size: 19px !important;
-    line-height: 1.35;
-  }
-
-  #mainHeaderSub {
-    font-family: 'Caveat', 'Dancing Script', cursive, sans-serif !important;
-    font-size: 32px !important;
-    font-weight: 700 !important;
-  }
-
-  body {
+    body {
       background: #ffffff;
       color: #000000;
       padding: 0;
@@ -1481,7 +1418,7 @@
     </div>
     
     <div>
-      <div class="badge"><span></span> Universal Student Tools Suite</div>
+      <div class="badge"><span></span> Universal Academic Suite</div>
     </div>
     <h1 id="mainHeaderTitle">Universal<br><em>Student</em> Tools</h1>
     <p class="subtitle" id="mainHeaderSub">An elite, satisfying academic workspace featuring a CGPA Calculator, Timetable Maker, and Study Planner with Aura AI. Built to inspire academic clarity.</p>
@@ -1512,7 +1449,7 @@
         <span class="card-title">Subject Registry & Performance</span>
         <div style="display:flex; gap:10px; align-items:center;">
           <span style="font-size:12px; color:var(--text-secondary); font-weight: 500;">Grading Scheme:</span>
-          <select id="gradingSystem" onchange="recalculate()" style="background:rgba(255, 255, 255, 0.04); border:1px solid var(--border-glass); color:var(--text-primary); font-family:'Outfit', sans-serif; font-size:13px; padding:6px 12px; border-radius:8px; cursor:pointer; outline:none;">
+          <select id="gradingSystem" onchange="recalculate()" style="background:rgba(255, 255, 255, 0.04); border:1px solid var(--border-glass); color:var(--text-primary); font-family:'Outfit',sans-serif; font-size:13px; padding:6px 12px; border-radius:8px; cursor:pointer; outline:none;">
             <option value="10">10-point System (CBCS)</option>
             <option value="4">4-point System (US GPA)</option>
             <option value="pct">Percentage Conversions</option>
@@ -1598,7 +1535,7 @@
     <div class="card" id="historyCard" style="display:none">
       <div class="card-header">
         <span class="card-title">Academic History Record</span>
-        <span id="overallCgpa" style="font-family:'Outfit', sans-serif; font-weight:700; font-size:1.1rem; color:var(--accent)"></span>
+        <span id="overallCgpa" style="font-family:'Outfit',sans-serif; font-weight:700; font-size:1.1rem; color:var(--accent)"></span>
       </div>
       <div id="historyList"></div>
     </div>
@@ -1709,12 +1646,9 @@
     </div>
   </div>
 
-  <!-- Professional Engineering Footer -->
-  <footer style="text-align:center; padding:3rem 1rem 1rem; color:var(--text-muted); font-size:12px; border-top:1px solid var(--border-glass); margin-top:4rem;">
-    <div style="font-family:'Outfit',sans-serif; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; margin-bottom:8px;">Universal Student Tools</div>
-    <div style="margin-bottom:12px; font-family:'Outfit',sans-serif;">Version 2.4.0 · State-Persistent Client-Side Application · Zero data leaves your device</div>
-    <div style="font-family:'Outfit',sans-serif;">&copy; 2026 Academic Suite. All Rights Reserved.</div>
-  </footer>
+  <p style="text-align:center; font-size:12px; color:var(--text-muted); margin-top:2.5rem; letter-spacing:0.02em;">
+    Engineered with standard university grading patterns · Zero data leaves your device · Pure Client-Side Computation
+  </p>
 </div>
 
 <!-- Email Account Linking Modal -->
@@ -1736,7 +1670,7 @@
 <div class="ai-bubble" onclick="toggleAiPanel()" id="aiBubbleEl" title="Aura AI Advisor">
   <svg width="76" height="76" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 8px 20px rgba(139, 92, 246, 0.45));">
     <!-- Background glass shuriken blade -->
-    <path d="M50 5 C54 40, 60 40, 95 50 C60 60, 60 54, 50 95 C46 60, 40 60, 5 50 C40 40, 40 46, 50 5 Z" fill="rgba(255, 255, 255, 0.85)" stroke="url(#ninja-border-grad)" stroke-width="2.5" />
+    <path d="M50 5 C54 40, 60 40, 95 50 C60 60, 60 54, 50 95 C46 60, 40 60, 5 50 C40 40, 40 46, 50 5 Z" fill="rgba(16, 20, 30, 0.85)" stroke="url(#ninja-border-grad)" stroke-width="2.5" />
     <!-- Inner glowing ninja eye / core -->
     <circle cx="50" cy="50" r="12" fill="url(#ninja-eye-grad)" stroke="var(--accent)" stroke-width="1.5" />
     <!-- Pulse ring inside the shuriken -->
@@ -1790,15 +1724,8 @@
 
 <!-- Core Script Setup -->
 <script>
-// ============================================================================
-// OMNI STUDENT TOOLS SUITE - CORE CLIENT APPLICATION ENGINE
-// ============================================================================
-// Architecture: Single Page State-Persistent MVC
-// Engineering: High-fidelity reactive animations, Web Audio Synthesis
-// ============================================================================
-
 // -------------------------------------------------------------
-// Part 1: Segmented View Navigation System
+// Part 1: Sliding Tool Switcher Navigation Logic
 // -------------------------------------------------------------
 function switchTool(tool) {
   const tools = ['calculator', 'timetable', 'planner'];
@@ -1821,284 +1748,102 @@ function switchTool(tool) {
 }
 
 // -------------------------------------------------------------
-// Part 2: Interactive 3D Colorful Background Setup (Solid Shaded 3D Renderer)
+// Part 2: Interactive Background Particles Setup
 // -------------------------------------------------------------
 const canvas = document.getElementById('particles-bg');
 const ctx = canvas.getContext('2d');
 
-let width = window.innerWidth;
-let height = window.innerHeight;
-canvas.width = width;
-canvas.height = height;
+let particles = [];
+let mouse = { x: null, y: null, radius: 100 };
 
-window.addEventListener('resize', () => {
-  width = window.innerWidth;
-  height = window.innerHeight;
-  canvas.width = width;
-  canvas.height = height;
-});
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
 
-// 3D Particles Config
-let particles3D = [];
-const particleCount = 55;
-const fov = 380; // Perspective focal depth
-
-// Mouse coordinates state
-let mouse3D = { x: 0, y: 0, rx: 0, ry: 0 };
 window.addEventListener('mousemove', (e) => {
-  mouse3D.x = e.clientX - width / 2;
-  mouse3D.y = e.clientY - height / 2;
-  mouse3D.rx = (e.clientY / height - 0.5) * 0.15;
-  mouse3D.ry = (e.clientX / width - 0.5) * 0.15;
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
 });
 
-// Initialize 3D particles
-for (let i = 0; i < particleCount; i++) {
-  particles3D.push({
-    x: (Math.random() - 0.5) * 750,
-    y: (Math.random() - 0.5) * 750,
-    z: (Math.random() - 0.5) * 750,
-    size: Math.random() * 4 + 2,
-    hue: Math.random() * 360,
-    speedZ: Math.random() * 0.5 - 0.25
-  });
-}
+window.addEventListener('mouseout', () => {
+  mouse.x = null;
+  mouse.y = null;
+});
 
-// 3D Cube Vertices
-const cubeSize = 100;
-const cubeVertices = [
-  {x: -cubeSize, y: -cubeSize, z: -cubeSize}, // 0
-  {x: cubeSize, y: -cubeSize, z: -cubeSize},  // 1
-  {x: cubeSize, y: cubeSize, z: -cubeSize},   // 2
-  {x: -cubeSize, y: cubeSize, z: -cubeSize},  // 3
-  {x: -cubeSize, y: -cubeSize, z: cubeSize},  // 4
-  {x: cubeSize, y: -cubeSize, z: cubeSize},   // 5
-  {x: cubeSize, y: cubeSize, z: cubeSize},    // 6
-  {x: -cubeSize, y: cubeSize, z: cubeSize}     // 7
-];
+class Particle {
+  constructor() {
+    this.x = Math.random() * canvas.width;
+    this.y = Math.random() * canvas.height;
+    this.size = Math.random() * 2.5 + 0.5;
+    this.speedX = Math.random() * 0.4 - 0.2;
+    this.speedY = Math.random() * 0.4 - 0.2;
+    this.color = Math.random() > 0.8 ? 'rgba(167, 139, 250, 0.4)' : 'rgba(148, 163, 184, 0.15)';
+  }
+  update() {
+    this.x += this.speedX;
+    this.y += this.speedY;
 
-// Cube Faces (defined with clockwise vertex indices for backface culling)
-const cubeFaces = [
-  { indices: [0, 3, 2, 1], normalSign: 1 }, // Back
-  { indices: [4, 5, 6, 7], normalSign: 1 }, // Front
-  { indices: [0, 1, 5, 4], normalSign: 1 }, // Bottom
-  { indices: [3, 7, 6, 2], normalSign: 1 }, // Top
-  { indices: [0, 4, 7, 3], normalSign: 1 }, // Left
-  { indices: [1, 2, 6, 5], normalSign: 1 }  // Right
-];
+    if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+    if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
 
-// Floating 3D Cubes State
-let activeCubes = [
-  { rx: 0.2, ry: 0.1, rz: 0.3, speedX: 0.0015, speedY: 0.002, speedZ: 0.001, posX: -240, posY: -160, posZ: 100, hue: 0 },
-  { rx: 0.5, ry: 0.3, rz: 0.1, speedX: -0.001, speedY: 0.0015, speedZ: -0.002, posX: 260, posY: 160, posZ: -50, hue: 120 },
-  { rx: 0.1, ry: 0.5, rz: 0.2, speedX: 0.002, speedY: -0.001, speedZ: 0.0015, posX: -190, posY: 210, posZ: -120, hue: 240 }
-];
-
-let angleX3D = 0.0004;
-let angleY3D = 0.0006;
-
-function rotateX3D(x, y, z, angle) {
-  let cos = Math.cos(angle);
-  let sin = Math.sin(angle);
-  return { x: x, y: y * cos - z * sin, z: y * sin + z * cos };
-}
-
-function rotateY3D(x, y, z, angle) {
-  let cos = Math.cos(angle);
-  let sin = Math.sin(angle);
-  return { x: x * cos - z * sin, y: y, z: x * sin + z * cos };
-}
-
-function rotateZ3D(x, y, z, angle) {
-  let cos = Math.cos(angle);
-  let sin = Math.sin(angle);
-  return { x: x * cos - y * sin, y: x * sin + y * cos, z: z };
-}
-
-function animateBackground3D() {
-  ctx.clearRect(0, 0, width, height);
-
-  const centerX = width / 2;
-  const centerY = height / 2;
-
-  // 1. Perspective project and render stardust particles (draw first since they are deep in background)
-  let projectedParticles = [];
-  particles3D.forEach((p) => {
-    p.z += p.speedZ;
-    if (p.z > 350) p.z = -350;
-    if (p.z < -350) p.z = 350;
-
-    p.hue = (p.hue + 0.3) % 360;
-
-    let r = rotateY3D(p.x, p.y, p.z, angleY3D + mouse3D.ry * 0.05);
-    r = rotateX3D(r.x, r.y, r.z, angleX3D + mouse3D.rx * 0.05);
-
-    let scale = fov / (fov + r.z + 350);
-    if (fov + r.z + 350 > 0) {
-      let screenX = r.x * scale + centerX;
-      let screenY = r.y * scale + centerY;
-      let radius = p.size * scale;
-
-      projectedParticles.push({
-        x: screenX,
-        y: screenY,
-        z: r.z,
-        r: radius,
-        hue: p.hue
-      });
-
-      // Render glowing radial aura
-      let grad = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, radius * 1.8);
-      grad.addColorStop(0, `hsla(${p.hue}, 95%, 65%, 0.15)`);
-      grad.addColorStop(0.3, `hsla(${p.hue}, 90%, 60%, 0.05)`);
-      grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-
-      ctx.beginPath();
-      ctx.arc(screenX, screenY, radius * 1.8, 0, Math.PI * 2);
-      ctx.fillStyle = grad;
-      ctx.fill();
-    }
-  });
-
-  // Draw 3D Connection Lines
-  for (let a = 0; a < projectedParticles.length; a++) {
-    for (let b = a + 1; b < projectedParticles.length; b++) {
-      let p1 = projectedParticles[a];
-      let p2 = projectedParticles[b];
-
-      let dx = p1.x - p2.x;
-      let dy = p1.y - p2.y;
+    // Mouse Interaction
+    if (mouse.x !== null && mouse.y !== null) {
+      let dx = mouse.x - this.x;
+      let dy = mouse.y - this.y;
       let dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < mouse.radius) {
+        let force = (mouse.radius - dist) / mouse.radius;
+        this.x -= dx * force * 0.03;
+        this.y -= dy * force * 0.03;
+      }
+    }
+  }
+  draw() {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fillStyle = this.color;
+    ctx.fill();
+  }
+}
 
-      if (dist < 100) {
-        let opacity = (100 - dist) / 100 * 0.06;
+function initParticles() {
+  particles = [];
+  const qty = Math.min(Math.floor(canvas.width / 16), 110);
+  for (let i = 0; i < qty; i++) {
+    particles.push(new Particle());
+  }
+}
+initParticles();
+
+function animateParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles.forEach(p => {
+    p.update();
+    p.draw();
+  });
+  
+  // Faint Constellation Link Lines
+  for (let a = 0; a < particles.length; a++) {
+    for (let b = a + 1; b < particles.length; b++) {
+      let dx = particles[a].x - particles[b].x;
+      let dy = particles[a].y - particles[b].y;
+      let dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 90) {
         ctx.beginPath();
-        ctx.moveTo(p1.x, p1.y);
-        ctx.lineTo(p2.x, p2.y);
-        
-        let grad = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
-        grad.addColorStop(0, `hsla(${p1.hue}, 90%, 60%, ${opacity})`);
-        grad.addColorStop(1, `hsla(${p2.hue}, 90%, 60%, ${opacity})`);
-
-        ctx.strokeStyle = grad;
+        ctx.moveTo(particles[a].x, particles[a].y);
+        ctx.lineTo(particles[b].x, particles[b].y);
+        ctx.strokeStyle = `rgba(167, 139, 250, ${0.1 - (dist / 90) * 0.1})`;
         ctx.lineWidth = 0.5;
         ctx.stroke();
       }
     }
   }
-
-  // 2. Render solid, shaded 3D floating cubes (Painter's Algorithm for depth sort)
-  let facesToDraw = [];
-
-  activeCubes.forEach(cube => {
-    cube.rx += cube.speedX + mouse3D.rx * 0.03;
-    cube.ry += cube.speedY + mouse3D.ry * 0.03;
-    cube.rz += cube.speedZ;
-    cube.hue = (cube.hue + 0.25) % 360;
-
-    // Rotate and translate vertices
-    let rotatedVertices = cubeVertices.map(v => {
-      let r = rotateX3D(v.x, v.y, v.z, cube.rx);
-      r = rotateY3D(r.x, r.y, r.z, cube.ry);
-      r = rotateZ3D(r.x, r.y, r.z, cube.rz);
-
-      return {
-        x: r.x + cube.posX,
-        y: r.y + cube.posY,
-        z: r.z + cube.posZ
-      };
-    });
-
-    // Process each face
-    cubeFaces.forEach(face => {
-      let v0 = rotatedVertices[face.indices[0]];
-      let v1 = rotatedVertices[face.indices[1]];
-      let v2 = rotatedVertices[face.indices[2]];
-      let v3 = rotatedVertices[face.indices[3]];
-
-      // Calculate Normal Vector using cross product
-      let ux = v1.x - v0.x;
-      let uy = v1.y - v0.y;
-      let uz = v1.z - v0.z;
-
-      let vx = v2.x - v0.x;
-      let vy = v2.y - v0.y;
-      let vz = v2.z - v0.z;
-
-      let nx = uy * vz - uz * vy;
-      let ny = uz * vx - ux * vz;
-      let nz = ux * vy - uy * vx;
-
-      // Normalize Normal
-      let len = Math.sqrt(nx*nx + ny*ny + nz*nz);
-      if (len > 0) {
-        nx /= len; ny /= len; nz /= len;
-      }
-
-      // Average depth of the face
-      let avgZ = (v0.z + v1.z + v2.z + v3.z) / 4 + 400; // Translate virtual screen offset
-
-      // Perspective project vertices
-      let scale0 = fov / (fov + v0.z + 400);
-      let scale1 = fov / (fov + v1.z + 400);
-      let scale2 = fov / (fov + v2.z + 400);
-      let scale3 = fov / (fov + v3.z + 400);
-
-      let p0 = { x: v0.x * scale0 + centerX, y: v0.y * scale0 + centerY };
-      let p1 = { x: v1.x * scale1 + centerX, y: v1.y * scale1 + centerY };
-      let p2 = { x: v2.x * scale2 + centerX, y: v2.y * scale2 + centerY };
-      let p3 = { x: v3.x * scale3 + centerX, y: v3.y * scale3 + centerY };
-
-      // Backface Culling check: if projected area is positive
-      let area = (p1.x - p0.x) * (p2.y - p0.y) - (p1.y - p0.y) * (p2.x - p0.x);
-      
-      if (area > 0 && avgZ > 0) {
-        // Calculate Lambertian flat shading intensity relative to a virtual light source
-        let lx = 0.3, ly = -0.4, lz = -0.87;
-        let dotProduct = nx * lx + ny * ly + nz * lz;
-        let lightIntensity = Math.max(0.12, -dotProduct); // Intensity range [0.12, 1.0]
-
-        facesToDraw.push({
-          points: [p0, p1, p2, p3],
-          avgZ: avgZ,
-          hue: cube.hue,
-          intensity: lightIntensity
-        });
-      }
-    });
-  });
-
-  // Sort faces from back to front (Painter's Algorithm)
-  facesToDraw.sort((a, b) => b.avgZ - a.avgZ);
-
-  // Render solid shaded faces
-  facesToDraw.forEach(face => {
-    // Fill Face
-    ctx.beginPath();
-    ctx.moveTo(face.points[0].x, face.points[0].y);
-    ctx.lineTo(face.points[1].x, face.points[1].y);
-    ctx.lineTo(face.points[2].x, face.points[2].y);
-    ctx.lineTo(face.points[3].x, face.points[3].y);
-    ctx.closePath();
-
-    let lightness = 38 + face.intensity * 44; 
-    ctx.fillStyle = `hsla(${face.hue}, 80%, ${lightness}%, 0.035)`; 
-    ctx.fill();
-
-    // Draw glowing edges
-    ctx.strokeStyle = `hsla(${face.hue}, 85%, 60%, 0.08)`;
-    ctx.lineWidth = 1.0;
-    ctx.stroke();
-  });
-
-  // Increment global rotation variables
-  angleX3D += 0.0002;
-  angleY3D += 0.0003;
-
-  requestAnimationFrame(animateBackground3D);
+  requestAnimationFrame(animateParticles);
 }
-
-animateBackground3D();
+animateParticles();
 
 // -------------------------------------------------------------
 // Part 3: Interactive 3D Cap/Prism Logo Physics & Card Tilts
