@@ -10,24 +10,19 @@
     <meta name="keywords" content="Himanshu Chahar, creative developer, webgl portfolio, three.js, hand tracking, stark holo-cad, doctor strange simulator, interactive UI designer, frontend engineer portfolio, premium portfolio">
     <meta name="author" content="Himanshu Chahar">
     <meta name="robots" content="index, follow">
-
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="Himanshu Chahar | Spatial Computing & Interactive UI Engineer">
     <meta property="og:description" content="Experience an ultra-premium, AI-inspired portfolio dashboard showcasing hand-tracking 3D tools, immersive simulators, and high-performance frontend interfaces.">
     <meta property="og:site_name" content="Himanshu Chahar Portfolio">
-
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Outfit:wght@200;300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-
     <!-- FontAwesome & CSS Library Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
     <!-- Custom CSS -->
     <link rel="stylesheet" href="portfolio.css">
-
     <!-- Three.js (3D graphics) and GSAP (physics animations) via CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
@@ -35,16 +30,12 @@
 <body>
     <!-- Infinite WebGL Starry Void Canvas -->
     <div id="webgl-canvas-container"></div>
-
     <!-- Interactive Canvas Overlay (Cursor Trails & Shockwaves) -->
     <canvas id="overlay-canvas"></canvas>
-
     <!-- Glass Cursor Aura Follower -->
     <div id="cursor-aura"></div>
-
     <!-- Holographic Scanning Grid Overlay -->
     <div class="holographic-grid-overlay"></div>
-
     <!-- Futuristic HUD UI System Overlays -->
     <div id="app-hud">
         <div class="hud-item hud-top-left">
@@ -74,7 +65,6 @@
             </div>
         </div>
     </div>
-
     <!-- Main Navigation Bar -->
     <header class="app-navbar">
         <a href="#hero" class="nav-logo magnetic-hover" id="nav-logo">
@@ -87,7 +77,6 @@
             <a href="student_tools.html" class="nav-link academic-pill magnetic-hover" id="nav-link-student">STUDENT DASHBOARD</a>
         </nav>
     </header>
-
     <!-- Main App Container -->
     <main id="app-scroll-container">
         <!-- Section 1: Hero Section (Futuristic Cinematic landing) -->
@@ -106,7 +95,6 @@
                 <div class="hero-subtext">
                     <span class="accent-cyan">//</span> SPATIAL COMPUTING & CREATIVE TECHNOLOGIST
                 </div>
-
                 <!-- Floating 3D Operating Card -->
                 <div class="hero-dashboard-card glass-panel" id="hero-card">
                     <div class="card-glow-bar glow-cyan"></div>
@@ -123,14 +111,12 @@
                         <div class="console-line"><span class="console-timestamp">[21:21:17]</span> Ready. Hover over elements to engage spatial tracking fields.</div>
                     </div>
                 </div>
-
                 <div class="hero-scroll-prompt">
                     <span class="scroll-arrow"><i class="fa-solid fa-chevron-down"></i></span>
                     <span class="scroll-text">SCROLL TO ORBIT DECK</span>
                 </div>
             </div>
         </section>
-
         <!-- Section 2: Project Showcase (3D Perspective Deck) -->
         <section id="projects" class="interactive-section">
             <div class="section-content">
@@ -138,14 +124,13 @@
                     <div class="section-badge">ORBITAL DECK</div>
                     <h2 class="section-title">CREATIVE SYSTEMS</h2>
                 </div>
-
                 <!-- Perspective 3D cards layout -->
                 <div class="projects-grid">
                     <!-- Project 1: Stark Holo-CAD -->
                     <div class="project-card glass-panel interactive-card" id="project-cad">
                         <div class="card-glow-bar glow-cyan"></div>
                         <div class="project-media-wrapper">
-                            <img src="project_cad.png" alt="Stark Holo-CAD System Mockup" class="project-thumbnail">
+                            <img src="project_cad.png?v=1" alt="Stark Holo-CAD System Mockup" class="project-thumbnail">
                             <div class="project-overlay-glow"></div>
                             <div class="scanner-line"></div>
                         </div>
@@ -164,12 +149,11 @@
                             </div>
                         </div>
                     </div>
-
                     <!-- Project 2: Doctor Strange Magic Simulator -->
                     <div class="project-card glass-panel interactive-card" id="project-strange">
                         <div class="card-glow-bar glow-purple"></div>
                         <div class="project-media-wrapper">
-                            <img src="project_strange.png" alt="Doctor Strange Simulator Mockup" class="project-thumbnail">
+                            <img src="project_strange.png?v=1" alt="Doctor Strange Simulator Mockup" class="project-thumbnail">
                             <div class="project-overlay-glow"></div>
                             <div class="scanner-line"></div>
                         </div>
@@ -188,12 +172,11 @@
                             </div>
                         </div>
                     </div>
-
                     <!-- Project 3: Universal Student Tools -->
                     <div class="project-card glass-panel interactive-card" id="project-student">
                         <div class="card-glow-bar glow-cyan"></div>
                         <div class="project-media-wrapper">
-                            <img src="project_student.png" alt="Universal Student Tools Mockup" class="project-thumbnail">
+                            <img src="project_student.png?v=1" alt="Universal Student Tools Mockup" class="project-thumbnail">
                             <div class="project-overlay-glow"></div>
                             <div class="scanner-line"></div>
                         </div>
@@ -212,12 +195,11 @@
                             </div>
                         </div>
                     </div>
-
                     <!-- Project 4: DNS Security Tunnel Analyzer -->
                     <div class="project-card glass-panel interactive-card" id="project-dns">
                         <div class="card-glow-bar glow-purple"></div>
                         <div class="project-media-wrapper">
-                            <img src="project_dns.png" alt="DNS Cyber Security Analyzer Mockup" class="project-thumbnail">
+                            <img src="project_dns.png?v=1" alt="DNS Cyber Security Analyzer Mockup" class="project-thumbnail">
                             <div class="project-overlay-glow"></div>
                             <div class="scanner-line"></div>
                         </div>
@@ -239,7 +221,6 @@
                 </div>
             </div>
         </section>
-
         <!-- Section 3: About Section (Holographic Developer Identity) -->
         <section id="about" class="interactive-section">
             <div class="section-content">
@@ -247,7 +228,6 @@
                     <div class="section-badge">IDENTITY DATABASE</div>
                     <h2 class="section-title">HOLOGRAPHIC PROFILE</h2>
                 </div>
-
                 <div class="about-container">
                     <!-- About Profile Panel -->
                     <div class="about-profile-card glass-panel" id="about-card">
@@ -275,7 +255,6 @@
                             </div>
                         </div>
                     </div>
-
                     <!-- Tech Stack Core matrix -->
                     <div class="about-tech-matrix glass-panel" id="about-skills">
                         <div class="card-glow-bar glow-purple"></div>
@@ -291,7 +270,6 @@
                                 <span class="tag glow-tag-cyan">MediaPipe Tracking</span>
                             </div>
                         </div>
-
                         <div class="skill-category">
                             <div class="skill-category-title">INTERACTIVE LOGIC</div>
                             <div class="skill-tags">
@@ -302,7 +280,6 @@
                                 <span class="tag glow-tag-purple">WebRTC</span>
                             </div>
                         </div>
-
                         <div class="skill-category">
                             <div class="skill-category-title">SYSTEMS & CYBER-CORE</div>
                             <div class="skill-tags">
@@ -316,7 +293,6 @@
                 </div>
             </div>
         </section>
-
         <!-- Section 4: Contact Section (Communication Control Portal) -->
         <section id="contact" class="interactive-section">
             <div class="section-content">
@@ -324,7 +300,6 @@
                     <div class="section-badge">COMMUNICATIONS CORE</div>
                     <h2 class="section-title">TRANSMIT DATAFEED</h2>
                 </div>
-
                 <div class="contact-card glass-panel" id="contact-panel">
                     <div class="card-glow-bar glow-cyan"></div>
                     <div class="panel-header">
@@ -333,7 +308,6 @@
                         <span class="panel-dot dot-green"></span>
                         <span class="panel-title">PORTAL_COMMUNICATION_PROTOCOL.sys</span>
                     </div>
-
                     <form class="contact-form" id="portfolio-contact-form" onsubmit="event.preventDefault(); return false;">
                         <div class="form-row">
                             <div class="form-group">
@@ -351,7 +325,6 @@
                                 </div>
                             </div>
                         </div>
-
                         <div class="form-group mt-4">
                             <label for="form-msg" class="form-label">ENCRYPTED MESSAGE DATAFEED</label>
                             <div class="input-wrapper">
@@ -359,7 +332,6 @@
                                 <span class="input-border"></span>
                             </div>
                         </div>
-
                         <div class="form-submit-container">
                             <button type="submit" class="transmit-btn magnetic-hover" id="btn-transmit">
                                 <span class="btn-laser-bg"></span>
@@ -367,7 +339,6 @@
                             </button>
                         </div>
                     </form>
-
                     <div id="console-response-log" class="console-text mt-4 hidden">
                         <div class="console-line"><span class="console-timestamp">[LOG]</span> Packet structured successfully.</div>
                         <div class="console-line"><span class="console-timestamp">[LOG]</span> Establishing socket tunnel... <span class="accent-cyan">OK</span></div>
@@ -376,7 +347,6 @@
                 </div>
             </div>
         </section>
-
         <!-- Footer -->
         <footer class="app-footer">
             <div class="footer-grid">
@@ -385,8 +355,8 @@
             </div>
         </footer>
     </main>
-
     <!-- Custom Script -->
     <script src="portfolio.js"></script>
 </body>
 </html>
+
