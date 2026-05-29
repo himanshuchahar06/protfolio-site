@@ -1,0 +1,460 @@
+/* ==========================================================================
+   STARK HOLO-CAD HUD STYLING SYSTEM
+   Aesthetics: Ultra-premium glassmorphism, glowing telemetry, and cyber-grid HUD.
+   ========================================================================== */
+
+:root {
+    --bg-dark: #020617;
+    --ui-bg: rgba(15, 23, 42, 0.45);
+    --ui-border: rgba(6, 182, 212, 0.2);
+    --ui-border-active: rgba(6, 182, 212, 0.8);
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --accent: #06b6d4;
+    --accent-glow: rgba(6, 182, 212, 0.45);
+    --font-cyber: 'Rajdhani', sans-serif;
+    --font-mono: 'Share Tech Mono', monospace;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
+}
+
+body {
+    font-family: var(--font-cyber);
+    font-weight: 500;
+    background-color: #010208;
+    color: var(--text-primary);
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+}
+
+/* Base Canvas layers */
+#vfxCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+#threeCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    pointer-events: none;
+}
+
+/* Glassmorphic Cyber Overlay Wrapper */
+.ui-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    pointer-events: none;
+    display: grid;
+    grid-template-columns: 320px 1fr 340px;
+    grid-template-rows: 80px 1fr 100px;
+    padding: 20px;
+    gap: 20px;
+}
+
+/* Ensure children can receive pointer events */
+.ui-panel {
+    pointer-events: auto;
+    background: var(--ui-bg);
+    border: 1px solid var(--ui-border);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(6, 182, 212, 0.05);
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.ui-panel:hover {
+    border-color: rgba(6, 182, 212, 0.4);
+    box-shadow: 0 10px 45px rgba(6, 182, 212, 0.08), inset 0 0 20px rgba(6, 182, 212, 0.08);
+}
+
+/* Top Header HUD bar */
+#app-header {
+    grid-column: 1 / 3;
+    grid-row: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(90deg, rgba(15, 23, 42, 0.6) 0%, rgba(15, 23, 42, 0) 100%);
+    border-left: 4px solid var(--accent);
+    padding: 0 20px;
+}
+
+#app-header h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.text-glow {
+    color: var(--accent);
+    text-shadow: 0 0 12px var(--accent-glow);
+}
+
+#app-header p {
+    font-family: var(--font-mono);
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+}
+
+/* System diagnostics widget (Top Right) */
+.diagnostic-widget {
+    grid-column: 3;
+    grid-row: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.diagnostic-item {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.diagnostic-val {
+    color: var(--accent);
+    font-weight: bold;
+}
+
+/* Left panel: Sculpt controller controls */
+.controls-left {
+    grid-column: 1;
+    grid-row: 2 / 4;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    overflow-y: auto;
+}
+
+/* Right panel: Webcam & Gesture stats */
+.controls-right {
+    grid-column: 3;
+    grid-row: 2 / 4;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    overflow-y: auto;
+}
+
+/* Webcam container with cyber border scanner */
+.webcam-panel {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4/3;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid var(--ui-border);
+}
+
+#webcam {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1); /* Mirror view */
+    opacity: 0.85;
+    transition: opacity 0.3s;
+    background: #020308;
+    display: block;
+}
+
+.webcam-scanner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(180deg, rgba(6, 182, 212, 0) 0%, var(--accent) 100%);
+    box-shadow: 0 0 15px var(--accent);
+    animation: scanner-anim 3s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes scanner-anim {
+    0% { top: 0%; }
+    50% { top: 100%; }
+    100% { top: 0%; }
+}
+
+/* Audio wave hud */
+.audio-waves-container {
+    height: 60px;
+    border: 1px solid rgba(6, 182, 212, 0.15);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    background: rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    padding: 0 10px;
+}
+
+.audio-bar {
+    width: 3px;
+    height: 20%;
+    background-color: var(--accent);
+    box-shadow: 0 0 8px var(--accent-glow);
+    transition: height 0.08s ease-in-out;
+    border-radius: 2px;
+}
+
+/* Gesture Telemetry log */
+.console-widget {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    background: rgba(1, 2, 8, 0.5);
+    border: 1px solid rgba(6, 182, 212, 0.1);
+    border-radius: 6px;
+    height: 100px;
+    overflow-y: auto;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.console-line {
+    opacity: 0.8;
+}
+
+.console-timestamp {
+    color: var(--text-secondary);
+}
+
+.console-accent {
+    color: var(--accent);
+}
+
+/* Generic Control Groups */
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+h2 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 4px;
+}
+
+.button-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.option-btn {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--ui-border);
+    padding: 0.5rem 0.7rem;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-family: var(--font-cyber);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    flex: 1 1 calc(50% - 0.4rem);
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.option-btn:hover {
+    background: rgba(6, 182, 212, 0.08);
+    border-color: rgba(6, 182, 212, 0.4);
+    color: var(--text-primary);
+}
+
+.option-btn.active {
+    background: rgba(6, 182, 212, 0.15);
+    border-color: var(--accent);
+    color: var(--text-primary);
+    box-shadow: 0 0 15px rgba(6, 182, 212, 0.35), inset 0 0 10px rgba(6, 182, 212, 0.1);
+}
+
+/* Special button styles */
+.action-btn {
+    background: rgba(239, 68, 68, 0.08);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #f87171;
+    width: 100%;
+}
+
+.action-btn:hover {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: #ef4444;
+}
+
+.action-btn.active {
+    background: rgba(239, 68, 68, 0.25);
+    border-color: #ef4444;
+    color: #fff;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.35);
+}
+
+.primary-btn {
+    background: rgba(34, 197, 94, 0.08);
+    border-color: rgba(34, 197, 94, 0.3);
+    color: #4ade80;
+    width: 100%;
+}
+
+.primary-btn:hover {
+    background: rgba(34, 197, 94, 0.15);
+    border-color: #22c55e;
+}
+
+.primary-btn.active {
+    background: rgba(34, 197, 94, 0.2);
+    border-color: #22c55e;
+    color: #fff;
+    box-shadow: 0 0 15px rgba(34, 197, 94, 0.35);
+}
+
+.camera-control {
+    margin-top: auto;
+}
+
+/* Center Crosshair / Scanning reticle */
+.central-reticle {
+    grid-column: 2;
+    grid-row: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    pointer-events: none;
+}
+
+.reticle-ring {
+    position: absolute;
+    border: 1px dashed var(--ui-border);
+    border-radius: 50%;
+    animation: rotate-clockwise 20s linear infinite;
+    opacity: 0.35;
+}
+
+.ring-outer {
+    width: 280px;
+    height: 280px;
+}
+
+.ring-inner {
+    width: 180px;
+    height: 180px;
+    border-style: solid;
+    border-width: 1px;
+    animation: rotate-counter 12s linear infinite;
+    opacity: 0.15;
+}
+
+.crosshair {
+    width: 20px;
+    height: 20px;
+    position: relative;
+}
+
+.crosshair::before, .crosshair::after {
+    content: '';
+    position: absolute;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+    opacity: 0.7;
+}
+
+.crosshair::before {
+    top: 50%;
+    left: -10px;
+    width: 40px;
+    height: 2px;
+    transform: translateY(-50%);
+}
+
+.crosshair::after {
+    left: 50%;
+    top: -10px;
+    height: 40px;
+    width: 2px;
+    transform: translateX(-50%);
+}
+
+@keyframes rotate-clockwise {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes rotate-counter {
+    from { transform: rotate(360deg); }
+    to { transform: rotate(0deg); }
+}
+
+/* Bottom status bar */
+.hud-footer {
+    grid-column: 1 / 4;
+    grid-row: 3;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.footer-section {
+    display: flex;
+    gap: 20px;
+}
+
+/* Responsive Overrides */
+@media (max-width: 900px) {
+    .ui-overlay {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto auto;
+        overflow-y: auto;
+        pointer-events: auto;
+    }
+    
+    .ui-panel {
+        pointer-events: auto;
+    }
+    
+    .controls-left, .controls-right {
+        grid-column: 1;
+        grid-row: auto;
+        max-height: none;
+    }
+    
+    .central-reticle {
+        display: none;
+    }
+}
