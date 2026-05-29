@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Strange Magic Simulator</title>
+    <link rel="stylesheet" href="style1.css">
+    
+    <!-- Google Fonts: Cinzel for mystic headings, Outfit for futuristic tech interface -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- MediaPipe Hands -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="cinematic-overlay">
+        <div class="loader-content">
+            <div class="mystic-loader-container">
+                <div class="outer-runic-ring"></div>
+                <div class="middle-runic-ring"></div>
+                <div class="inner-runic-ring"></div>
+                <div class="center-eye"></div>
+            </div>
+            <h1 class="mystic-title">Sanctum Sanctorum</h1>
+            <p class="cinematic-quote">"Forget everything that you think you know."</p>
+            <p id="loading-text" class="status-msg">Initializing Mystic Gateways...</p>
+            <button id="start-btn" class="hidden start-magic-btn">Enter the Sanctum</button>
+        </div>
+    </div>
+
+    <!-- UI Overlay (Cinematic HUD) -->
+    <div id="ui-container" class="hidden">
+        
+        <!-- Center Calibration Reticle -->
+        <div id="center-reticle" class="calibration-reticle">
+            <div class="reticle-ring ring-1"></div>
+            <div class="reticle-ring ring-2"></div>
+            <div class="reticle-ring ring-3"></div>
+            <div class="reticle-text">Raise Hands to Cast Spells</div>
+        </div>
+
+        <!-- Left HUD: Mystic Spellbook & Status -->
+        <div class="hud panel-left">
+            <div class="glass-panel main-header">
+                <h2>SANCTUM HUD</h2>
+                <div class="system-status">
+                    <span id="fps-counter" class="hud-metric">FPS: --</span>
+                    <span id="tracking-status" class="hud-metric inactive">TRACKING: OFF</span>
+                </div>
+            </div>
+            
+            <div class="glass-panel spellbook-panel">
+                <h3>Active Spellbook</h3>
+                <div class="spell-list">
+                    <div id="spell-shield" class="spell-item">
+                        <div class="spell-icon-container">
+                            <span class="spell-icon orange">🛡️</span>
+                        </div>
+                        <div class="spell-info">
+                            <span class="spell-name">Eldritch Shield</span>
+                            <span class="spell-gesture">Gesture: Open Palm</span>
+                        </div>
+                        <span class="spell-status-badge inactive" id="badge-shield">Ready</span>
+                    </div>
+                    
+                    <div id="spell-lightning" class="spell-item">
+                        <div class="spell-icon-container">
+                            <span class="spell-icon cyan">⚡</span>
+                        </div>
+                        <div class="spell-info">
+                            <span class="spell-name">Lightning Bolt</span>
+                            <span class="spell-gesture">Gesture: Point Finger</span>
+                        </div>
+                        <span class="spell-status-badge inactive" id="badge-lightning">Ready</span>
+                    </div>
+
+                    <div id="spell-whip" class="spell-item">
+                        <div class="spell-icon-container">
+                            <span class="spell-icon amber">🎗️</span>
+                        </div>
+                        <div class="spell-info">
+                            <span class="spell-name">Tao Whip</span>
+                            <span class="spell-gesture">Gesture: Pinch Fingers</span>
+                        </div>
+                        <span class="spell-status-badge inactive" id="badge-whip">Ready</span>
+                    </div>
+
+                    <div id="spell-timeloop" class="spell-item">
+                        <div class="spell-icon-container">
+                            <span class="spell-icon green">👁️</span>
+                        </div>
+                        <div class="spell-info">
+                            <span class="spell-name">Time Loop</span>
+                            <span class="spell-gesture">Gesture: Peace Sign</span>
+                        </div>
+                        <span class="spell-status-badge inactive" id="badge-timeloop">Ready</span>
+                    </div>
+
+                    <div id="spell-fistcharge" class="spell-item">
+                        <div class="spell-icon-container">
+                            <span class="spell-icon red">✊</span>
+                        </div>
+                        <div class="spell-info">
+                            <span class="spell-name">Power Charge</span>
+                            <span class="spell-gesture">Gesture: Closed Fist</span>
+                        </div>
+                        <span class="spell-status-badge inactive" id="badge-fistcharge">Ready</span>
+                    </div>
+
+                    <div id="spell-portal" class="spell-item">
+                        <div class="spell-icon-container">
+                            <span class="spell-icon portal-color">🌀</span>
+                        </div>
+                        <div class="spell-info">
+                            <span class="spell-name">Sling Portal</span>
+                            <span class="spell-gesture">Gesture: Dual Open Hands</span>
+                        </div>
+                        <span class="spell-status-badge inactive" id="badge-portal">Ready</span>
+                    </div>
+
+                    <div id="spell-shockwave" class="spell-item">
+                        <div class="spell-icon-container">
+                            <span class="spell-icon white">💥</span>
+                        </div>
+                        <div class="spell-info">
+                            <span class="spell-name">Sanctum Clap</span>
+                            <span class="spell-gesture">Gesture: Quick Hand Clap</span>
+                        </div>
+                        <span class="spell-status-badge inactive" id="badge-shockwave">Ready</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right HUD: Sanctum & VFX Settings -->
+        <div class="hud panel-right">
+            <div class="glass-panel controls-panel">
+                <h3>Sorcerer's Controls</h3>
+                
+                <!-- Master Volume Control -->
+                <div class="control-group">
+                    <label for="volume-control">Master Gain</label>
+                    <div class="slider-with-value">
+                        <input type="range" id="volume-control" min="0" max="100" value="40" class="hud-slider">
+                        <span id="volume-display" class="hud-val">40%</span>
+                    </div>
+                </div>
+
+                <!-- Smoothing Sensitivity Control -->
+                <div class="control-group">
+                    <label for="sensitivity-control">Smoothing Filter</label>
+                    <div class="slider-with-value">
+                        <input type="range" id="sensitivity-control" min="5" max="95" value="70" class="hud-slider">
+                        <span id="sensitivity-display" class="hud-val">High</span>
+                    </div>
+                </div>
+
+                <!-- Particle Limit Control -->
+                <div class="control-group">
+                    <label for="particles-limit">Particle Limit</label>
+                    <select id="particles-limit" class="hud-select">
+                        <option value="1000">Minimal (1K Sparks)</option>
+                        <option value="3000" selected>Optimal (3K Sparks)</option>
+                        <option value="6000">Extreme (6K Sparks)</option>
+                    </select>
+                </div>
+
+                <hr class="hud-divider">
+
+                <!-- Toggle Buttons -->
+                <button id="toggle-webcam" class="hud-btn active">Hide Webcam</button>
+                <button id="toggle-landmarks" class="hud-btn">Show Landmarks</button>
+                <button id="fullscreen-btn" class="hud-btn">Fullscreen</button>
+            </div>
+
+            <!-- Gesture Debug HUD -->
+            <div class="glass-panel debug-panel">
+                <h3>Webcam Feed Details</h3>
+                <div id="gesture-debug" class="debug-text">
+                    <div class="hand-debug-row">
+                        <span class="hand-label">LEFT HAND:</span>
+                        <span id="left-hand-status" class="hand-val-status">None</span>
+                    </div>
+                    <div class="hand-debug-row">
+                        <span class="hand-label">RIGHT HAND:</span>
+                        <span id="right-hand-status" class="hand-val-status">None</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom HUD: Interactive Instructions -->
+        <div class="hud panel-bottom">
+            <div class="glass-panel feedback-panel">
+                <p id="live-feedback" class="feedback-text">Spellcasting training active. Form your first mandala.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Rendering Environment -->
+    <div class="container">
+        <!-- Hidden webcam input -->
+        <video id="input-video" class="hidden" autoplay playsinline></video>
+        
+        <!-- Canvas for WebCam output and MediaPipe drawing (mirrored) -->
+        <canvas id="output-canvas"></canvas>
+        
+        <!-- Canvas for Three.js 3D elements (Portal dimension) -->
+        <div id="three-container"></div>
+        
+        <!-- Canvas for high-fidelity 2D VFX overlays (Mandalas, Sparks, lighting) -->
+        <canvas id="vfx-canvas"></canvas>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
