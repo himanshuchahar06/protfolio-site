@@ -1068,3 +1068,165 @@ body {
         gap: 12px;
     }
 }
+/* ==========================================================================
+   LeetCode Futuristic Integration
+   ========================================================================== */
+
+/* Orange Design Variables */
+:root {
+    --accent-orange: #ffa116;
+    --accent-orange-rgb: 255, 161, 22;
+    --accent-orange-glow: rgba(255, 161, 22, 0.12);
+}
+
+/* LeetCode Futuristic Widget Card */
+.leetcode-widget {
+    margin-top: 2rem;
+    padding: 1.25rem;
+    width: 100%;
+    background: rgba(255, 161, 22, 0.03);
+    border: 1px solid rgba(255, 161, 22, 0.15);
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: inset 0 0 15px rgba(255, 161, 22, 0.02);
+}
+
+.leetcode-widget::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 50% -20%, rgba(255, 161, 22, 0.1) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+.leetcode-widget:hover {
+    border-color: rgba(255, 161, 22, 0.4);
+    box-shadow: 0 10px 30px rgba(255, 161, 22, 0.08), inset 0 0 20px rgba(255, 161, 22, 0.05);
+    transform: translateY(-2px);
+}
+
+.leetcode-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 0.75rem;
+}
+
+.leetcode-logo {
+    width: 18px;
+    height: 18px;
+    fill: var(--accent-orange);
+    filter: drop-shadow(0 0 8px rgba(255, 161, 22, 0.6));
+    animation: pulseOrange 2s infinite ease-in-out;
+}
+
+.leetcode-title {
+    font-family: var(--font-heading);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--text-primary);
+}
+
+.leetcode-id-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-glass);
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    margin-bottom: 1.25rem;
+}
+
+.leetcode-id-label {
+    color: var(--text-muted);
+}
+
+.leetcode-id-val {
+    color: var(--accent-orange);
+    font-weight: 700;
+    text-shadow: 0 0 8px rgba(255, 161, 22, 0.4);
+}
+
+.leetcode-stats-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    width: 100%;
+    margin-bottom: 1.25rem;
+    border-top: 1px dashed rgba(255, 161, 22, 0.15);
+    padding-top: 1rem;
+}
+
+.leetcode-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.leetcode-stat-count {
+    font-family: var(--font-heading);
+    font-size: 16px;
+    font-weight: 900;
+    color: var(--text-primary);
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+}
+
+.leetcode-stat-lbl {
+    font-family: var(--font-mono);
+    font-size: 8px;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+}
+
+.leetcode-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    background: rgba(255, 161, 22, 0.08);
+    border: 1px solid rgba(255, 161, 22, 0.25);
+    color: var(--accent-orange);
+    font-family: var(--font-heading);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    padding: 10px 0;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.leetcode-link:hover {
+    background: var(--accent-orange);
+    color: #030307;
+    box-shadow: 0 0 20px rgba(255, 161, 22, 0.3);
+    border-color: var(--accent-orange);
+}
+
+.leetcode-link i {
+    font-size: 8px;
+    transition: transform 0.3s;
+}
+
+.leetcode-link:hover i {
+    transform: translate(2px, -2px);
+}
+
+@keyframes pulseOrange {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.1); opacity: 1; }
+}
