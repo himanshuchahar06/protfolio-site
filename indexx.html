@@ -1,0 +1,1976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arcane Motion — Webcam WebGL Spellcasting Engine</title>
+  <meta name="description" content="An ultra-premium cinematic gesture-controlled spell engine combining MediaPipe AI landmark tracking with immersive WebGL graphics and audio synthesis.">
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Three.js (r128) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  
+  <!-- MediaPipe Hands & Camera CDNs -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+<style>
+/* ==========================================================================
+   ARCANE MOTION - CORE STYLE SYSTEM
+   ========================================================================== */
+
+:root {
+  --bg-deep: #05050a;
+  --bg-dark: #0a0a12;
+  --bg-card: rgba(12, 12, 22, 0.6);
+  --bg-card-hover: rgba(18, 18, 32, 0.75);
+  --border-glow: rgba(255, 255, 255, 0.07);
+  --border-glow-active: rgba(0, 242, 254, 0.3);
+  
+  --color-aether: #00f2fe;
+  --color-arcane: #f7b733;
+  --color-crimson: #ff416c;
+  --color-emerald: #00b09b;
+  --color-portal: #8b5cf6;
+  --color-text-main: #e2e8f0;
+  --color-text-muted: #94a3b8;
+  --color-text-dim: #64748b;
+  
+  --font-title: 'Cinzel', serif;
+  --font-tech: 'Outfit', sans-serif;
+  --font-code: 'Fira Code', monospace;
+  
+  --shadow-neon-cyan: 0 0 15px rgba(0, 242, 254, 0.3);
+  --shadow-neon-gold: 0 0 15px rgba(247, 183, 51, 0.3);
+  --shadow-neon-red: 0 0 15px rgba(255, 65, 108, 0.3);
+  --shadow-neon-green: 0 0 15px rgba(0, 176, 155, 0.3);
+  --shadow-neon-portal: 0 0 15px rgba(139, 92, 246, 0.3);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background-color: var(--bg-deep);
+  color: var(--color-text-main);
+  font-family: var(--font-tech);
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  width: 100%;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-deep); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+
+#ambient-glow-mesh {
+  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+  z-index: -3; pointer-events: none;
+  background: 
+    radial-gradient(circle at 10% 20%, rgba(139,92,246,0.05) 0%, transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(0,242,254,0.05) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(10,10,18,1) 0%, rgba(5,5,10,1) 100%);
+  transition: background 1.5s ease;
+}
+
+.film-grain-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 1000; pointer-events: none; opacity: 0.02;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* CINEMATIC OVERLAY */
+.cinematic-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: #030307; z-index: 9999;
+  display: flex; justify-content: center; align-items: center;
+  transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 1.2s;
+}
+.cinematic-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+.loader-content {
+  text-align: center; max-width: 600px; width: 90%;
+  display: flex; flex-direction: column; align-items: center; gap: 1.5rem;
+}
+
+.mystic-loader-container {
+  position: relative; width: 160px; height: 160px; margin-bottom: 1.5rem;
+}
+
+.outer-runic-ring {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  border: 2px dashed rgba(0,242,254,0.4); border-radius: 50%;
+  animation: rotateClockwise 20s linear infinite;
+}
+.outer-runic-ring::before {
+  content: "⚡ 🌀 🛡️ 👁️ ✊ 🎗️ 💥 🌀";
+  position: absolute; width: 100%; height: 100%; font-size: 8px;
+  color: var(--color-aether); letter-spacing: 12px;
+  display: flex; justify-content: center; align-items: center;
+  text-shadow: var(--shadow-neon-cyan);
+}
+
+.middle-runic-ring {
+  position: absolute; top: 15px; left: 15px; width: 130px; height: 130px;
+  border: 1px dashed rgba(247,183,51,0.3); border-radius: 50%;
+  animation: rotateCounterClockwise 15s linear infinite;
+}
+.middle-runic-ring::before {
+  content: "A R C A N E  M O T I O N";
+  position: absolute; width: 100%; height: 100%; font-size: 7px;
+  font-family: var(--font-tech); font-weight: 700; color: var(--color-arcane);
+  letter-spacing: 8px; display: flex; justify-content: center; align-items: center;
+  text-shadow: var(--shadow-neon-gold);
+}
+
+.inner-runic-ring {
+  position: absolute; top: 35px; left: 35px; width: 90px; height: 90px;
+  border: 1.5px solid rgba(255,65,108,0.2); border-radius: 50%;
+  display: flex; justify-content: center; align-items: center;
+  animation: pulseGlow 3s ease-in-out infinite;
+}
+
+.center-eye {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(139,92,246,0.4) 60%, transparent 100%);
+  box-shadow: 0 0 20px rgba(139,92,246,0.8);
+}
+
+.mystic-title {
+  font-family: var(--font-title); font-size: 2.2rem; letter-spacing: 6px; font-weight: 800;
+  background: linear-gradient(135deg, #fff 0%, #a2a8bd 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  text-transform: uppercase;
+}
+
+.cinematic-quote {
+  font-style: italic; color: var(--color-text-muted); font-size: 0.9rem;
+  letter-spacing: 2px; max-width: 450px; opacity: 0.8;
+}
+
+.loader-terminal {
+  width: 100%; background: rgba(5,5,10,0.85); border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 8px; padding: 1rem; text-align: left; font-family: var(--font-code);
+  font-size: 0.75rem; height: 120px; overflow-y: auto; color: var(--color-text-dim);
+  display: flex; flex-direction: column; gap: 0.25rem;
+}
+.terminal-line { display: flex; gap: 0.5rem; }
+.terminal-line.success { color: var(--color-emerald); }
+.terminal-line.info { color: var(--color-aether); }
+.terminal-line.warning { color: var(--color-arcane); }
+
+.start-magic-btn {
+  background: linear-gradient(135deg, rgba(0,242,254,0.15) 0%, rgba(139,92,246,0.15) 100%);
+  border: 1px solid var(--color-aether); color: #fff; padding: 0.85rem 2.5rem;
+  font-family: var(--font-tech); font-weight: 500; font-size: 1rem; letter-spacing: 2px;
+  border-radius: 4px; cursor: pointer; box-shadow: var(--shadow-neon-cyan);
+  transition: all 0.3s ease; margin-top: 1rem; text-transform: uppercase;
+}
+.start-magic-btn:hover {
+  background: linear-gradient(135deg, rgba(0,242,254,0.3) 0%, rgba(139,92,246,0.3) 100%);
+  box-shadow: 0 0 25px rgba(0,242,254,0.6), 0 0 10px rgba(139,92,246,0.4);
+  transform: translateY(-2px);
+}
+.start-magic-btn:active { transform: translateY(0); }
+.hidden-element { display: none !important; }
+
+/* LAB SECTION */
+#lab-section {
+  position: relative; width: 100%; height: 100vh;
+  display: flex; flex-direction: column; justify-content: space-between; overflow: hidden;
+}
+.lab-bg-overlay {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  z-index: -2; pointer-events: none;
+  background: radial-gradient(circle at center, transparent 30%, rgba(5,5,10,0.85) 90%);
+}
+.render-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+#input-video { display: none; }
+#output-canvas {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  object-fit: cover; z-index: 1;
+  filter: contrast(1.1) brightness(0.85) saturate(0.9) hue-rotate(-2deg);
+  opacity: 0.35; transition: opacity 0.5s ease;
+}
+#output-canvas.hidden { opacity: 0; pointer-events: none; }
+#three-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
+#vfx-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 3; pointer-events: none; }
+
+/* HUD LAYER */
+.hud-layer {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 10; pointer-events: none; display: grid;
+  grid-template-columns: 320px 1fr 340px;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas: 
+    "header . control"
+    "left . right"
+    "bottom feedback bottom";
+  padding: 1.5rem; gap: 1.5rem;
+}
+
+.glass-panel {
+  background: var(--bg-card); backdrop-filter: blur(25px) saturate(180%);
+  -webkit-backdrop-filter: blur(25px) saturate(180%);
+  border: 1px solid var(--border-glow); border-radius: 12px; padding: 1.25rem;
+  pointer-events: auto;
+  box-shadow: 0 8px 32px 0 rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.05);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex; flex-direction: column; gap: 1rem;
+}
+.glass-panel:hover { background: var(--bg-card-hover); border-color: rgba(255,255,255,0.12); }
+.glass-panel.active-glow-cyan { border-color: rgba(0,242,254,0.45); box-shadow: var(--shadow-neon-cyan), 0 8px 32px rgba(0,0,0,0.4); }
+.glass-panel.active-glow-gold { border-color: rgba(247,183,51,0.45); box-shadow: var(--shadow-neon-gold), 0 8px 32px rgba(0,0,0,0.4); }
+.glass-panel.active-glow-red { border-color: rgba(255,65,108,0.45); box-shadow: var(--shadow-neon-red), 0 8px 32px rgba(0,0,0,0.4); }
+.glass-panel.active-glow-green { border-color: rgba(0,176,155,0.45); box-shadow: var(--shadow-neon-green), 0 8px 32px rgba(0,0,0,0.4); }
+.glass-panel.active-glow-portal { border-color: rgba(139,92,246,0.45); box-shadow: var(--shadow-neon-portal), 0 8px 32px rgba(0,0,0,0.4); }
+
+.hud-header {
+  grid-area: header; flex-direction: row; justify-content: space-between;
+  align-items: center; height: 64px;
+}
+.brand-section { display: flex; flex-direction: column; }
+.brand-title {
+  font-family: var(--font-title); font-size: 1.1rem; font-weight: 700; letter-spacing: 2px;
+  background: linear-gradient(135deg, #fff 0%, #a2a8bd 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.brand-subtitle { font-size: 0.6rem; letter-spacing: 3px; color: var(--color-aether); font-weight: 600; text-transform: uppercase; }
+.hud-status-group { display: flex; gap: 0.75rem; }
+.status-badge {
+  font-family: var(--font-code); font-size: 0.65rem; padding: 0.25rem 0.6rem;
+  border-radius: 4px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+  display: flex; align-items: center; gap: 0.35rem;
+}
+.status-indicator { width: 5px; height: 5px; border-radius: 50%; background: var(--color-text-dim); }
+.status-badge.active .status-indicator { background: var(--color-aether); box-shadow: 0 0 8px var(--color-aether); animation: blink 2s infinite; }
+
+.panel-left-sidebar { grid-area: left; height: max-content; max-height: calc(100vh - 180px); overflow-y: auto; }
+.panel-title {
+  font-family: var(--font-tech); font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--color-text-muted); border-bottom: 1px solid rgba(255,255,255,0.05);
+  padding-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;
+}
+.spell-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.spell-item {
+  display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem;
+  border-radius: 8px; border: 1px solid rgba(255,255,255,0.02);
+  background: rgba(255,255,255,0.01); cursor: pointer; transition: all 0.3s ease;
+}
+.spell-item:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.08); }
+.spell-item.active { background: rgba(0,242,254,0.08); border-color: rgba(0,242,254,0.3); }
+.spell-icon {
+  width: 32px; height: 32px; border-radius: 6px;
+  display: flex; justify-content: center; align-items: center;
+  font-size: 1.1rem; background: rgba(255,255,255,0.05); transition: background 0.3s ease;
+}
+.spell-item.active .spell-icon { background: var(--color-aether); color: var(--bg-deep); }
+.spell-details { display: flex; flex-direction: column; flex-grow: 1; }
+.spell-name { font-size: 0.8rem; font-weight: 600; color: var(--color-text-main); }
+.spell-gesture { font-size: 0.65rem; color: var(--color-text-muted); }
+.spell-status-tag {
+  font-family: var(--font-code); font-size: 0.55rem; padding: 0.15rem 0.4rem;
+  border-radius: 3px; background: rgba(255,255,255,0.05); color: var(--color-text-dim); text-transform: uppercase;
+}
+.spell-item.active .spell-status-tag { background: rgba(255,255,255,0.15); color: #fff; }
+
+.panel-right-sidebar { grid-area: right; height: max-content; max-height: calc(100vh - 180px); overflow-y: auto; }
+.control-group { display: flex; flex-direction: column; gap: 0.4rem; }
+.control-label-row { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); }
+
+.hud-slider {
+  -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px;
+  background: rgba(255,255,255,0.1); outline: none; cursor: pointer; transition: background 0.3s ease;
+}
+.hud-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%;
+  background: var(--color-aether); box-shadow: var(--shadow-neon-cyan); transition: transform 0.2s;
+}
+.hud-slider::-webkit-slider-thumb:hover { transform: scale(1.3); }
+
+.action-buttons-group { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.25rem; }
+.hud-btn {
+  background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08);
+  color: var(--color-text-main); border-radius: 6px; padding: 0.55rem;
+  font-family: var(--font-tech); font-size: 0.7rem; font-weight: 500; letter-spacing: 1px;
+  cursor: pointer; transition: all 0.3s cubic-bezier(0.16,1,0.3,1); text-transform: uppercase;
+}
+.hud-btn:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.2); transform: translateY(-1px); }
+.hud-btn.active { background: rgba(0,242,254,0.06); border-color: var(--color-aether); color: var(--color-aether); box-shadow: 0 0 10px rgba(0,242,254,0.15); }
+
+.hud-divider { border: 0; height: 1px; background: linear-gradient(to right, rgba(255,255,255,0.01), rgba(255,255,255,0.06), rgba(255,255,255,0.01)); }
+
+.telemetry-row { display: flex; justify-content: space-between; font-family: var(--font-code); font-size: 0.65rem; padding: 0.2rem 0; }
+.telemetry-label { color: var(--color-text-dim); }
+.telemetry-value { color: var(--color-text-muted); }
+.telemetry-value.active-glow { color: var(--color-aether); text-shadow: var(--shadow-neon-cyan); }
+
+.calibration-reticle-container {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  pointer-events: none; z-index: 5; display: flex; flex-direction: column;
+  align-items: center; gap: 1rem; opacity: 0.6; transition: opacity 0.5s ease;
+}
+.calibration-reticle-container.faded { opacity: 0.12; }
+.reticle-ring {
+  position: relative; width: 90px; height: 90px; border-radius: 50%;
+  border: 1px dashed rgba(255,255,255,0.1); display: flex; justify-content: center; align-items: center;
+}
+.reticle-ring::before {
+  content: ""; position: absolute; width: 60px; height: 60px; border-radius: 50%;
+  border: 1px solid rgba(0,242,254,0.25); box-shadow: inset 0 0 10px rgba(0,242,254,0.1);
+  animation: rotateClockwise 8s linear infinite;
+}
+.reticle-crosshair { width: 6px; height: 6px; background: var(--color-aether); border-radius: 50%; box-shadow: var(--shadow-neon-cyan); }
+.reticle-text {
+  font-size: 0.65rem; letter-spacing: 2px; color: var(--color-text-muted); text-transform: uppercase;
+  text-align: center; background: rgba(0,0,0,0.6); padding: 0.25rem 0.75rem; border-radius: 20px;
+  backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.05);
+}
+
+.hud-bottom-feedback {
+  grid-area: feedback; justify-self: center; width: 100%; max-width: 680px;
+  flex-direction: row; align-items: center; justify-content: center; height: 52px; padding: 0 1.5rem;
+}
+.feedback-text {
+  font-family: var(--font-tech); font-size: 0.85rem; font-weight: 500; letter-spacing: 1px;
+  color: var(--color-text-main); text-align: center; text-shadow: 0 0 8px rgba(255,255,255,0.2);
+}
+
+/* SCROLL INDICATOR */
+.scroller-indicator {
+  position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%);
+  z-index: 10; display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
+  opacity: 0.7; cursor: pointer; pointer-events: auto; animation: bounce 2s infinite;
+}
+.scroller-text { font-size: 0.6rem; letter-spacing: 3px; text-transform: uppercase; color: var(--color-text-dim); }
+.scroller-arrow { color: var(--color-aether); font-size: 0.85rem; }
+
+/* SPECS SECTION */
+.specs-wrapper {
+  background: #030307; position: relative; z-index: 20;
+  padding: 6rem 2rem; border-top: 1px solid rgba(255,255,255,0.05);
+}
+.section-container { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 6rem; }
+.specs-header {
+  text-align: center; max-width: 700px; margin: 0 auto 3rem auto;
+  display: flex; flex-direction: column; gap: 1rem;
+}
+.specs-subtitle { font-size: 0.75rem; letter-spacing: 4px; text-transform: uppercase; color: var(--color-aether); font-weight: 700; }
+.specs-title {
+  font-family: var(--font-title); font-size: 2.5rem; letter-spacing: 4px;
+  background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase;
+}
+.specs-desc { color: var(--color-text-muted); font-size: 0.95rem; line-height: 1.6; }
+
+.features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem; }
+.feature-card {
+  background: rgba(10,10,18,0.5); border: 1px solid rgba(255,255,255,0.04); border-radius: 12px;
+  padding: 2.25rem; transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+  position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 1.25rem;
+}
+.feature-card::before {
+  content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+  background: linear-gradient(to right, transparent, rgba(0,242,254,0.3), transparent);
+  opacity: 0; transition: opacity 0.4s;
+}
+.feature-card:hover { transform: translateY(-4px); background: rgba(15,15,28,0.7); border-color: rgba(255,255,255,0.08); }
+.feature-card:hover::before { opacity: 1; }
+.card-icon {
+  font-size: 1.75rem; width: 48px; height: 48px; border-radius: 8px;
+  background: rgba(255,255,255,0.02); display: flex; justify-content: center; align-items: center;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+.feature-card:hover .card-icon { border-color: rgba(0,242,254,0.2); background: rgba(0,242,254,0.05); color: var(--color-aether); }
+.card-title { font-family: var(--font-tech); font-size: 1.1rem; font-weight: 700; letter-spacing: 1.5px; color: #fff; text-transform: uppercase; }
+.card-desc { font-size: 0.85rem; color: var(--color-text-muted); line-height: 1.6; }
+
+.interactive-spec-widget {
+  background: rgba(10,10,18,0.3); border: 1px solid rgba(255,255,255,0.04); border-radius: 12px;
+  padding: 1.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: center;
+}
+@media (max-width: 900px) { .interactive-spec-widget { grid-template-columns: 1fr; } }
+.widget-info { display: flex; flex-direction: column; gap: 1rem; }
+.widget-title { font-family: var(--font-tech); font-size: 1.3rem; font-weight: 700; letter-spacing: 2px; color: #fff; text-transform: uppercase; }
+.widget-desc { font-size: 0.9rem; color: var(--color-text-muted); line-height: 1.6; }
+.widget-canvas-container {
+  background: #020204; border: 1px solid rgba(255,255,255,0.05); border-radius: 8px;
+  aspect-ratio: 16/10; position: relative; overflow: hidden;
+}
+.widget-canvas-container canvas { width: 100%; height: 100%; }
+.widget-badge {
+  position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.04);
+  font-family: var(--font-code); font-size: 0.6rem; padding: 0.2rem 0.5rem; border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.08); color: var(--color-aether);
+}
+
+.code-block-editor-container {
+  background: #050508; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px;
+  overflow: hidden; font-family: var(--font-code); font-size: 0.8rem; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+.code-editor-header {
+  background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.05);
+  padding: 0.6rem 1rem; display: flex; justify-content: space-between; align-items: center;
+}
+.editor-title { color: var(--color-text-muted); font-size: 0.7rem; letter-spacing: 1px; text-transform: uppercase; }
+.editor-controls { display: flex; gap: 0.4rem; }
+.editor-dot { width: 8px; height: 8px; border-radius: 50%; }
+.editor-dot.red { background: #ff5f56; }
+.editor-dot.yellow { background: #ffbd2e; }
+.editor-dot.green { background: #27c93f; }
+.code-editor-body { padding: 1.25rem; overflow-x: auto; line-height: 1.5; color: #abb2bf; }
+.code-keyword { color: #c678dd; }
+.code-type { color: #56b6c2; }
+.code-var { color: #e06c75; }
+.code-func { color: #61afef; }
+.code-val { color: #d19a66; }
+.code-comment { color: var(--color-text-dim); font-style: italic; }
+
+.hands-nodes-schematic {
+  display: grid; grid-template-columns: 1.2fr 1fr; gap: 3rem;
+  background: rgba(10,10,18,0.4); border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 12px; padding: 3rem;
+}
+@media (max-width: 850px) { .hands-nodes-schematic { grid-template-columns: 1fr; padding: 1.5rem; gap: 2rem; } }
+.schematic-diagram {
+  background: #010103; border: 1px solid rgba(255,255,255,0.05); border-radius: 8px;
+  height: 380px; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden;
+}
+.schematic-panel-details { display: flex; flex-direction: column; gap: 1.5rem; justify-content: center; }
+.node-inspector-row {
+  background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.03); border-radius: 6px;
+  padding: 0.75rem 1rem; display: flex; justify-content: space-between; font-family: var(--font-code);
+  font-size: 0.75rem; transition: all 0.3s;
+}
+.node-inspector-row:hover { background: rgba(0,242,254,0.02); border-color: rgba(0,242,254,0.15); }
+.node-inspector-name { color: var(--color-text-main); font-weight: 500; }
+.node-inspector-id { color: var(--color-aether); }
+
+.engine-cta-block {
+  background: radial-gradient(circle at center, rgba(139,92,246,0.08) 0%, rgba(5,5,10,0.6) 80%), rgba(10,10,18,0.4);
+  border: 1px solid rgba(139,92,246,0.25); box-shadow: 0 0 40px rgba(139,92,246,0.06);
+  border-radius: 16px; padding: 4rem 2rem; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 1.5rem;
+}
+.cta-title { font-family: var(--font-title); font-size: 2.2rem; letter-spacing: 4px; text-transform: uppercase; color: #fff; }
+.cta-desc { max-width: 600px; color: var(--color-text-muted); line-height: 1.6; }
+.cta-button {
+  background: linear-gradient(135deg, var(--color-portal) 0%, rgba(0,242,254,0.8) 100%);
+  border: none; color: #fff; padding: 1rem 3.5rem; font-family: var(--font-tech); font-weight: 700;
+  font-size: 1rem; letter-spacing: 2px; border-radius: 6px; cursor: pointer;
+  box-shadow: var(--shadow-neon-portal); transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+  text-transform: uppercase; text-decoration: none;
+}
+.cta-button:hover { box-shadow: 0 0 35px var(--color-portal), 0 0 15px rgba(0,242,254,0.4); transform: translateY(-2px) scale(1.02); }
+
+.specs-footer {
+  text-align: center; border-top: 1px solid rgba(255,255,255,0.03); padding-top: 3rem;
+  font-size: 0.75rem; color: var(--color-text-dim); letter-spacing: 1px;
+}
+
+/* ANIMATIONS */
+@keyframes rotateClockwise { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes rotateCounterClockwise { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 10px rgba(255,65,108,0.2); }
+  50% { box-shadow: 0 0 25px rgba(255,65,108,0.5), 0 0 10px rgba(139,92,246,0.2); }
+  100% { box-shadow: 0 0 10px rgba(255,65,108,0.2); }
+}
+@keyframes blink { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translate(-50%, 0); }
+  40% { transform: translate(-50%, -10px); }
+  60% { transform: translate(-50%, -5px); }
+}
+
+@media (max-width: 1024px) {
+  .hud-layer {
+    grid-template-columns: 1fr; grid-template-rows: auto auto auto auto;
+    grid-template-areas: "header" "left" "right" "feedback";
+    overflow-y: auto; pointer-events: auto;
+  }
+  .hud-layer > * { grid-area: auto !important; }
+}
+</style>
+</head>
+<body>
+
+  <div id="ambient-glow-mesh"></div>
+  <div class="film-grain-overlay"></div>
+
+  <!-- LOADING SCREEN -->
+  <div id="loading-screen" class="cinematic-overlay">
+    <div class="loader-content">
+      <div class="mystic-loader-container">
+        <div class="outer-runic-ring"></div>
+        <div class="middle-runic-ring"></div>
+        <div class="inner-runic-ring"></div>
+        <div class="center-eye"></div>
+      </div>
+      <h1 class="mystic-title">Arcane Motion</h1>
+      <p class="cinematic-quote">"Connect biological vectors to synthetic dimensional energy."</p>
+      <div class="loader-terminal" id="loader-terminal">
+        <div class="terminal-line info">[SYS] INITIALIZING COGNITIVE INTERFACE...</div>
+      </div>
+      <button id="start-btn" class="start-magic-btn hidden-element">Enter Sanctum</button>
+    </div>
+  </div>
+
+  <!-- MAIN LAB -->
+  <main id="lab-section">
+    <div class="lab-bg-overlay"></div>
+    <div class="render-container">
+      <video id="input-video" autoplay playsinline muted></video>
+      <canvas id="output-canvas"></canvas>
+      <div id="three-container"></div>
+      <canvas id="vfx-canvas"></canvas>
+    </div>
+
+    <div class="calibration-reticle-container" id="calibration-reticle">
+      <div class="reticle-ring"><div class="reticle-crosshair"></div></div>
+      <div class="reticle-text">Align Hand to Calibrate Vectors</div>
+    </div>
+
+    <div class="hud-layer">
+      <header class="glass-panel hud-header">
+        <div class="brand-section">
+          <h2 class="brand-title">Arcane Engine</h2>
+          <span class="brand-subtitle">Model 3.5-Aether</span>
+        </div>
+        <div class="hud-status-group">
+          <div class="status-badge active"><span class="status-indicator"></span><span>GLSL: LOADED</span></div>
+          <div class="status-badge" id="tracking-badge"><span class="status-indicator"></span><span id="tracking-text">TRACKING: SIMULATED</span></div>
+        </div>
+      </header>
+
+      <section class="glass-panel panel-left-sidebar" id="spellbook-codex">
+        <h3 class="panel-title">
+          <span>Active Spellbook</span>
+          <span class="spell-status-tag" style="color: var(--color-aether);">Mode 1.0</span>
+        </h3>
+        <div class="spell-list">
+          <div class="spell-item active" id="spell-shield" data-spell="shield">
+            <div class="spell-icon">🛡️</div>
+            <div class="spell-details"><span class="spell-name">Eldritch Shield</span><span class="spell-gesture">Gesture: Open Palm [Spacebar]</span></div>
+            <span class="spell-status-tag" id="badge-shield">ACTIVE</span>
+          </div>
+          <div class="spell-item" id="spell-whip" data-spell="whip">
+            <div class="spell-icon">🎗️</div>
+            <div class="spell-details"><span class="spell-name">Tao Energy Whip</span><span class="spell-gesture">Gesture: Pinch Fingers [W]</span></div>
+            <span class="spell-status-tag" id="badge-whip">READY</span>
+          </div>
+          <div class="spell-item" id="spell-lightning" data-spell="lightning">
+            <div class="spell-icon">⚡</div>
+            <div class="spell-details"><span class="spell-name">Tesla Arc Bolt</span><span class="spell-gesture">Gesture: Point Finger [L]</span></div>
+            <span class="spell-status-tag" id="badge-lightning">READY</span>
+          </div>
+          <div class="spell-item" id="spell-fist" data-spell="fist">
+            <div class="spell-icon">✊</div>
+            <div class="spell-details"><span class="spell-name">Singularity Fist</span><span class="spell-gesture">Gesture: Closed Fist [F]</span></div>
+            <span class="spell-status-tag" id="badge-fist">READY</span>
+          </div>
+          <div class="spell-item" id="spell-loop" data-spell="loop">
+            <div class="spell-icon">👁️</div>
+            <div class="spell-details"><span class="spell-name">Temporal Chrono-Ring</span><span class="spell-gesture">Gesture: Peace Sign [T]</span></div>
+            <span class="spell-status-tag" id="badge-loop">READY</span>
+          </div>
+          <div class="spell-item" id="spell-portal" data-spell="portal">
+            <div class="spell-icon">🌀</div>
+            <div class="spell-details"><span class="spell-name">Sling Portal Gate</span><span class="spell-gesture">Gesture: Dual Palms [P]</span></div>
+            <span class="spell-status-tag" id="badge-portal">READY</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="glass-panel panel-right-sidebar" id="telemetry-matrix">
+        <h3 class="panel-title">Engine Matrix</h3>
+        <div class="control-group">
+          <div class="control-label-row"><span>Audio Master Gain</span><span id="volume-val">40%</span></div>
+          <input type="range" id="volume-control" min="0" max="100" value="40" class="hud-slider">
+        </div>
+        <div class="control-group">
+          <div class="control-label-row"><span>Double Exponential Smoother</span><span id="smoothing-val">70%</span></div>
+          <input type="range" id="smoothing-control" min="5" max="95" value="70" class="hud-slider">
+        </div>
+        <div class="control-group">
+          <div class="control-label-row"><span>Volumetric Particle Limit</span><span id="particles-val">3000</span></div>
+          <input type="range" id="particles-control" min="1000" max="6000" step="500" value="3000" class="hud-slider">
+        </div>
+        <hr class="hud-divider">
+        <div class="control-group">
+          <span class="control-label-row" style="font-weight:600; font-size:0.7rem; color:var(--color-aether);">GPU TELEMETRY</span>
+          <div class="telemetry-row"><span class="telemetry-label">Frame Render Time:</span><span class="telemetry-value active-glow" id="hud-frame-time">16.6ms</span></div>
+          <div class="telemetry-row"><span class="telemetry-label">Active Particle Recycler:</span><span class="telemetry-value" id="hud-active-particles">0 / 3000</span></div>
+          <div class="telemetry-row"><span class="telemetry-label">Landmark Vectors:</span><span class="telemetry-value" id="hud-hand-vectors">L: 0, R: 0</span></div>
+          <div class="telemetry-row"><span class="telemetry-label">Motion Velocity:</span><span class="telemetry-value" id="hud-velocity">0.00 px/sec</span></div>
+        </div>
+        <hr class="hud-divider">
+        <div class="action-buttons-group">
+          <button id="toggle-camera-btn" class="hud-btn">Enable Camera</button>
+          <button id="toggle-webcam-visibility" class="hud-btn">Hide Feed</button>
+          <button id="sound-btn" class="hud-btn active">Mute Synth</button>
+          <button id="fullscreen-btn" class="hud-btn">Fullscreen</button>
+        </div>
+      </section>
+
+      <footer class="glass-panel hud-bottom-feedback">
+        <p class="feedback-text" id="live-feedback">Spellcaster sandbox ready. Press Spacebar or raise hand to generate Eldritch Mandalas.</p>
+      </footer>
+    </div>
+
+    <div class="scroller-indicator" id="scroller-trigger">
+      <span class="scroller-text">Architectural Specifications</span>
+      <span class="scroller-arrow">▼</span>
+    </div>
+  </main>
+
+  <!-- SPECS SECTION -->
+  <section class="specs-wrapper" id="specifications-section">
+    <div class="section-container">
+      <div class="specs-header">
+        <span class="specs-subtitle">High-End Engineering Spec</span>
+        <h2 class="specs-title">Behind the Arcane</h2>
+        <p class="specs-desc">Arcane Motion fuses computer vision heuristics with high-performance WebGL shaders to capture raw biological kinematics and synthesize high-fidelity visual effects.</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="card-icon">🧠</div>
+          <h4 class="card-title">Dual-Hand AI Intelligence</h4>
+          <p class="card-desc">MediaPipe Multi-Hand landmark mapping delivers 21 three-dimensional skeletal coordinates per hand, computing localized angular kinematics in real time directly inside the client thread.</p>
+        </div>
+        <div class="feature-card">
+          <div class="card-icon">💎</div>
+          <h4 class="card-title">Volumetric Particle Fields</h4>
+          <p class="card-desc">Three.js additive blend shaders simulate volumetric stardust voids, deep space portals, and rotating runic structures, utilizing high-performance circular geometries and canvas texture buffers.</p>
+        </div>
+        <div class="feature-card">
+          <div class="card-icon">🌊</div>
+          <h4 class="card-title">Exp. Motion Smoothing</h4>
+          <p class="card-desc">Double-exponential Holt-Winters filtering operates on raw vector streams, suppressing biomechanical handshake micro-jitters without introducing processing latency or visual delay.</p>
+        </div>
+      </div>
+
+      <hr class="hud-divider">
+
+      <div class="hands-nodes-schematic">
+        <div class="schematic-panel-details">
+          <h3 class="widget-title">AI Landmark Architecture</h3>
+          <p class="widget-desc">Hover over the interactive hand node points inside the schematic diagram to inspect the structural index indices returned by the MediaPipe vision engine.</p>
+          <div class="node-inspector-row">
+            <span class="node-inspector-name">Selected Coordinate Node:</span>
+            <span class="node-inspector-id" id="inspected-node-name">Index 0 - Wrist Base</span>
+          </div>
+          <div class="node-inspector-row">
+            <span class="node-inspector-name">Biomechanical Purpose:</span>
+            <span class="node-inspector-id" id="inspected-node-purpose">Translational Palm Center anchor</span>
+          </div>
+        </div>
+        <div class="schematic-diagram">
+          <canvas id="hand-schematic-canvas"></canvas>
+          <span class="widget-badge">LIVE VECTOR INSPECTOR</span>
+        </div>
+      </div>
+
+      <div class="interactive-spec-widget">
+        <div class="widget-info">
+          <h3 class="widget-title">GLSL Fragment Pipeline</h3>
+          <p class="widget-desc">Inspect the raw GPU fragment shader responsible for generating the glowing volumetric eldritch shield mandala.</p>
+          <div class="code-block-editor-container">
+            <div class="code-editor-header">
+              <span class="editor-title">eldritch_mandala_shader.frag</span>
+              <div class="editor-controls">
+                <span class="editor-dot red"></span><span class="editor-dot yellow"></span><span class="editor-dot green"></span>
+              </div>
+            </div>
+            <pre class="code-editor-body"><code><span class="code-keyword">#ifdef</span> <span class="code-var">GL_ES</span>
+<span class="code-keyword">precision</span> <span class="code-type">mediump</span> <span class="code-type">float</span>;
+<span class="code-keyword">#endif</span>
+
+<span class="code-keyword">uniform</span> <span class="code-type">float</span> <span class="code-var">u_time</span>;
+<span class="code-keyword">uniform</span> <span class="code-type">vec2</span> <span class="code-var">u_resolution</span>;
+<span class="code-keyword">uniform</span> <span class="code-type">float</span> <span class="code-var">u_velocity</span>; <span class="code-comment">// Hand movement speed</span>
+
+<span class="code-type">void</span> <span class="code-func">main</span>() {
+  <span class="code-type">vec2</span> uv = <span class="code-var">gl_FragCoord</span>.<span class="code-var">xy</span> / <span class="code-var">u_resolution</span>.<span class="code-var">xy</span>;
+  <span class="code-type">vec2</span> center = uv - <span class="code-type">vec2</span>(<span class="code-val">0.5</span>);
+  <span class="code-type">float</span> r = <span class="code-func">length</span>(center) * <span class="code-val">2.0</span>;
+  <span class="code-type">float</span> theta = <span class="code-func">atan</span>(center.<span class="code-var">y</span>, center.<span class="code-var">x</span>);
+  
+  <span class="code-comment">// Concentric runic oscillation bands</span>
+  <span class="code-type">float</span> ring = <span class="code-func">sin</span>(r * <span class="code-val">40.0</span> - <span class="code-var">u_time</span> * <span class="code-val">8.0</span> * (<span class="code-val">1.0</span> + <span class="code-var">u_velocity</span>));
+  <span class="code-type">float</span> spokes = <span class="code-func">sin</span>(theta * <span class="code-val">8.0</span> + <span class="code-var">u_time</span> * <span class="code-val">4.0</span>);
+  
+  <span class="code-type">vec3</span> color = <span class="code-type">vec3</span>(<span class="code-val">0.0</span>, <span class="code-val">0.95</span>, <span class="code-val">1.0</span>) * <span class="code-func">smoothstep</span>(<span class="code-val">0.05</span>, <span class="code-val">0.07</span>, ring * spokes);
+  <span class="code-var">gl_FragColor</span> = <span class="code-type">vec4</span>(color, <span class="code-val">1.0</span>);
+}</code></pre>
+          </div>
+        </div>
+        <div class="widget-canvas-container">
+          <canvas id="shader-preview-canvas"></canvas>
+          <span class="widget-badge">GPU SHADER PASS</span>
+        </div>
+      </div>
+
+      <div class="interactive-spec-widget">
+        <div class="widget-canvas-container">
+          <canvas id="smoothing-graph-canvas"></canvas>
+          <span class="widget-badge">HOLT-WINTERS SUPPRESSION FEED</span>
+        </div>
+        <div class="widget-info">
+          <h3 class="widget-title">Holt-Winters Curve Synthesizer</h3>
+          <p class="widget-desc">Observe the live mathematical simulation of our motion-smoothing filter. The red jitter line represents raw camera input. The cyan curve represents the double-exponentially smoothed vector.</p>
+          <div class="control-group" style="margin-top: 1rem;">
+            <div class="control-label-row"><span>Simulation Jitter Intensity:</span><span id="jitter-val">30px</span></div>
+            <input type="range" id="jitter-control" min="5" max="75" value="30" class="hud-slider">
+          </div>
+        </div>
+      </div>
+
+      <hr class="hud-divider">
+
+      <div class="engine-cta-block">
+        <h3 class="cta-title">Synthesize Your Energy</h3>
+        <p class="cta-desc">Step into the live interactive lab and manipulate the volumetric particle void.</p>
+        <a href="#lab-section" class="cta-button" id="cta-enter-lab">Activate Spellroom</a>
+      </div>
+
+      <footer class="specs-footer">
+        <p>© 2026 ARCANE MOTION LABORATORY. DEVELOPED IN PARTNERSHIP WITH GOOGLE DEEPMIND ANTIGRAVITY ENGINE & VERCEL INTERACTIVE.</p>
+      </footer>
+    </div>
+  </section>
+
+<script>
+/* ==========================================================================
+   ARCANE MOTION - INTERACTIVE SPELLCASTING CORE
+   ========================================================================== */
+
+// ==========================================
+// 1. ADVANCED SYNTHESIS ENGINE (Web Audio API)
+// ==========================================
+class ArcaneAudioManager {
+  constructor() {
+    this.ctx = null;
+    this.masterGain = null;
+    this.ambientDrone = null;
+    this.droneFilter = null;
+    this.shieldOsc = null;
+    this.shieldGain = null;
+    this.shieldFilter = null;
+    this.portalNoise = null;
+    this.portalGain = null;
+    this.portalFilter = null;
+    this.portalLFO = null;
+    this.whipOsc = null;
+    this.whipGain = null;
+    this.whipFilter = null;
+    this.chargeOsc = null;
+    this.chargeGain = null;
+    this.isMuted = true;
+    this.masterVolume = 0.4;
+    this.isDronePlaying = false;
+    this.isPortalPlaying = false;
+  }
+
+  init() {
+    if (this.ctx) return;
+    try {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      this.ctx = new AudioContextClass();
+      this.masterGain = this.ctx.createGain();
+      this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : this.masterVolume, this.ctx.currentTime);
+      this.masterGain.connect(this.ctx.destination);
+      this.startAmbientDrone();
+    } catch(e) { console.warn("Web Audio API not supported:", e); }
+  }
+
+  resume() {
+    this.init();
+    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+  }
+
+  setVolume(percent) {
+    this.masterVolume = Math.max(0, Math.min(1, percent / 100));
+    if (this.masterGain && !this.isMuted) {
+      this.masterGain.gain.setTargetAtTime(this.masterVolume, this.ctx.currentTime, 0.1);
+    }
+  }
+
+  toggleMute() {
+    this.isMuted = !this.isMuted;
+    if (this.masterGain) {
+      const targetVal = this.isMuted ? 0 : this.masterVolume;
+      this.masterGain.gain.setTargetAtTime(targetVal, this.ctx.currentTime, 0.15);
+    }
+    return this.isMuted;
+  }
+
+  startAmbientDrone() {
+    if (this.isDronePlaying || !this.ctx) return;
+    this.isDronePlaying = true;
+    this.droneFilter = this.ctx.createBiquadFilter();
+    this.droneFilter.type = 'lowpass';
+    this.droneFilter.frequency.setValueAtTime(110, this.ctx.currentTime);
+    this.droneFilter.Q.setValueAtTime(1.5, this.ctx.currentTime);
+    const osc1 = this.ctx.createOscillator();
+    const osc2 = this.ctx.createOscillator();
+    const gainNode = this.ctx.createGain();
+    osc1.type = 'sawtooth'; osc1.frequency.setValueAtTime(41.2, this.ctx.currentTime);
+    osc2.type = 'sawtooth'; osc2.frequency.setValueAtTime(41.4, this.ctx.currentTime);
+    gainNode.gain.setValueAtTime(0.22, this.ctx.currentTime);
+    osc1.connect(this.droneFilter); osc2.connect(this.droneFilter);
+    this.droneFilter.connect(gainNode); gainNode.connect(this.masterGain);
+    osc1.start(); osc2.start();
+    this.ambientDrone = { osc1, osc2, gainNode };
+  }
+
+  updateAmbientDrone(activity) {
+    if (!this.droneFilter || !this.ctx) return;
+    const cutoff = 100 + (activity * 350);
+    this.droneFilter.frequency.setTargetAtTime(Math.min(cutoff, 750), this.ctx.currentTime, 0.2);
+  }
+
+  startShieldHum() {
+    if (this.shieldOsc || !this.ctx) return;
+    this.shieldOsc = this.ctx.createOscillator();
+    this.shieldFilter = this.ctx.createBiquadFilter();
+    this.shieldGain = this.ctx.createGain();
+    this.shieldOsc.type = 'triangle';
+    this.shieldOsc.frequency.setValueAtTime(130.81, this.ctx.currentTime);
+    this.shieldFilter.type = 'bandpass';
+    this.shieldFilter.frequency.setValueAtTime(261.63, this.ctx.currentTime);
+    this.shieldFilter.Q.setValueAtTime(8, this.ctx.currentTime);
+    this.shieldGain.gain.setValueAtTime(0, this.ctx.currentTime);
+    this.shieldGain.gain.linearRampToValueAtTime(0.45, this.ctx.currentTime + 0.35);
+    this.shieldOsc.connect(this.shieldFilter);
+    this.shieldFilter.connect(this.shieldGain);
+    this.shieldGain.connect(this.masterGain);
+    this.shieldOsc.start();
+  }
+
+  updateShieldHum(velocity) {
+    if (!this.shieldOsc || !this.ctx) return;
+    const fCenter = 200 + (velocity * 900);
+    const oscPitch = 130 + (velocity * 80);
+    const volume = 0.2 + Math.min(0.5, velocity * 1.8);
+    this.shieldFilter.frequency.setTargetAtTime(Math.min(fCenter, 2200), this.ctx.currentTime, 0.08);
+    this.shieldOsc.frequency.setTargetAtTime(oscPitch, this.ctx.currentTime, 0.12);
+    this.shieldGain.gain.setTargetAtTime(volume, this.ctx.currentTime, 0.1);
+  }
+
+  stopShieldHum() {
+    if (!this.shieldOsc || !this.ctx) return;
+    const g = this.shieldGain, o = this.shieldOsc, f = this.shieldFilter;
+    g.gain.setTargetAtTime(0, this.ctx.currentTime, 0.15);
+    setTimeout(() => { try { o.stop(); o.disconnect(); f.disconnect(); g.disconnect(); } catch(e) {} }, 200);
+    this.shieldOsc = null; this.shieldFilter = null; this.shieldGain = null;
+  }
+
+  playWhipWhoosh(velocity) {
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const filter = this.ctx.createBiquadFilter();
+    const gainNode = this.ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(120, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(750 + (velocity * 1200), this.ctx.currentTime + 0.22);
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(450, this.ctx.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(2800, this.ctx.currentTime + 0.22);
+    gainNode.gain.setValueAtTime(0.08, this.ctx.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.38, this.ctx.currentTime + 0.06);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.24);
+    osc.connect(filter); filter.connect(gainNode); gainNode.connect(this.masterGain);
+    osc.start(); osc.stop(this.ctx.currentTime + 0.25);
+  }
+
+  playLightningCrackle() {
+    if (!this.ctx) return;
+    const bufferSize = this.ctx.sampleRate * 0.07;
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    const source = this.ctx.createBufferSource();
+    source.buffer = buffer;
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(800 + Math.random() * 2200, this.ctx.currentTime);
+    filter.Q.setValueAtTime(9, this.ctx.currentTime);
+    const gainNode = this.ctx.createGain();
+    gainNode.gain.setValueAtTime(0.65, this.ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.06);
+    source.connect(filter); filter.connect(gainNode); gainNode.connect(this.masterGain);
+    source.start();
+  }
+
+  playChronoTick() {
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const gainNode = this.ctx.createGain();
+    osc.type = 'sine'; osc.frequency.setValueAtTime(1900, this.ctx.currentTime);
+    gainNode.gain.setValueAtTime(0.28, this.ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.02);
+    osc.connect(gainNode); gainNode.connect(this.masterGain);
+    osc.start(); osc.stop(this.ctx.currentTime + 0.03);
+  }
+
+  startFistCharge() {
+    if (this.chargeOsc || !this.ctx) return;
+    this.chargeOsc = this.ctx.createOscillator();
+    this.chargeGain = this.ctx.createGain();
+    this.chargeOsc.type = 'sine';
+    this.chargeOsc.frequency.setValueAtTime(65, this.ctx.currentTime);
+    this.chargeOsc.frequency.exponentialRampToValueAtTime(330, this.ctx.currentTime + 2.5);
+    this.chargeGain.gain.setValueAtTime(0.01, this.ctx.currentTime);
+    this.chargeGain.gain.linearRampToValueAtTime(0.65, this.ctx.currentTime + 2.0);
+    this.chargeOsc.connect(this.chargeGain); this.chargeGain.connect(this.masterGain);
+    this.chargeOsc.start();
+  }
+
+  updateFistCharge(val) {
+    if (!this.chargeOsc || !this.ctx) return;
+    this.chargeOsc.frequency.setTargetAtTime(65 + (val * 260), this.ctx.currentTime, 0.05);
+  }
+
+  detonateFistCharge() {
+    if (!this.chargeOsc || !this.ctx) return;
+    try { this.chargeOsc.stop(); this.chargeOsc.disconnect(); this.chargeGain.disconnect(); } catch(e) {}
+    this.chargeOsc = null; this.chargeGain = null;
+    const subOsc = this.ctx.createOscillator();
+    const noiseOsc = this.ctx.createOscillator();
+    const filter = this.ctx.createBiquadFilter();
+    const dist = this.ctx.createWaveShaper();
+    const gainNode = this.ctx.createGain();
+    subOsc.type = 'sine'; subOsc.frequency.setValueAtTime(110, this.ctx.currentTime);
+    subOsc.frequency.exponentialRampToValueAtTime(25, this.ctx.currentTime + 1.2);
+    noiseOsc.type = 'sawtooth'; noiseOsc.frequency.setValueAtTime(150, this.ctx.currentTime);
+    noiseOsc.frequency.exponentialRampToValueAtTime(1, this.ctx.currentTime + 1.0);
+    filter.type = 'lowpass'; filter.frequency.setValueAtTime(500, this.ctx.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(35, this.ctx.currentTime + 1.2);
+    gainNode.gain.setValueAtTime(0.9, this.ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 1.4);
+    const makeCurve = (amount) => {
+      const k = amount, n = 44100, curve = new Float32Array(n), deg = Math.PI / 180;
+      for (let i = 0; i < n; ++i) { const x = (i * 2) / n - 1; curve[i] = ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x)); }
+      return curve;
+    };
+    dist.curve = makeCurve(85);
+    noiseOsc.connect(dist); dist.connect(filter); subOsc.connect(filter);
+    filter.connect(gainNode); gainNode.connect(this.masterGain);
+    subOsc.start(); noiseOsc.start();
+    subOsc.stop(this.ctx.currentTime + 1.5); noiseOsc.stop(this.ctx.currentTime + 1.5);
+  }
+
+  startPortalSound() {
+    if (this.isPortalPlaying || !this.ctx) return;
+    this.isPortalPlaying = true;
+    const bufferSize = this.ctx.sampleRate * 2.0;
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    this.portalNoise = this.ctx.createBufferSource();
+    this.portalNoise.buffer = buffer; this.portalNoise.loop = true;
+    this.portalFilter = this.ctx.createBiquadFilter();
+    this.portalFilter.type = 'lowpass'; this.portalFilter.frequency.setValueAtTime(320, this.ctx.currentTime);
+    this.portalFilter.Q.setValueAtTime(4.0, this.ctx.currentTime);
+    this.portalGain = this.ctx.createGain();
+    this.portalGain.gain.setValueAtTime(0, this.ctx.currentTime);
+    this.portalGain.gain.linearRampToValueAtTime(0.55, this.ctx.currentTime + 0.85);
+    this.portalNoise.connect(this.portalFilter); this.portalFilter.connect(this.portalGain); this.portalGain.connect(this.masterGain);
+    this.portalNoise.start();
+    this.portalLFO = this.ctx.createOscillator();
+    const lfoGain = this.ctx.createGain();
+    this.portalLFO.frequency.setValueAtTime(5.5, this.ctx.currentTime);
+    lfoGain.gain.setValueAtTime(100, this.ctx.currentTime);
+    this.portalLFO.connect(lfoGain); lfoGain.connect(this.portalFilter.frequency);
+    this.portalLFO.start();
+  }
+
+  updatePortalSound(spacing) {
+    if (!this.portalFilter || !this.ctx) return;
+    this.portalFilter.frequency.setTargetAtTime(Math.min(250 + (spacing * 1300), 2600), this.ctx.currentTime, 0.1);
+    this.portalGain.gain.setTargetAtTime(0.3 + Math.min(0.4, spacing * 0.7), this.ctx.currentTime, 0.18);
+  }
+
+  stopPortalSound() {
+    if (!this.isPortalPlaying || !this.ctx) return;
+    this.isPortalPlaying = false;
+    const g = this.portalGain, n = this.portalNoise, f = this.portalFilter, l = this.portalLFO;
+    if (g) g.gain.setTargetAtTime(0, this.ctx.currentTime, 0.3);
+    setTimeout(() => {
+      try { if (n) { n.stop(); n.disconnect(); } if (l) { l.stop(); l.disconnect(); } if (f) f.disconnect(); if (g) g.disconnect(); } catch(e) {}
+    }, 400);
+    this.portalNoise = null; this.portalFilter = null; this.portalGain = null; this.portalLFO = null;
+  }
+}
+
+const audioManager = new ArcaneAudioManager();
+
+
+// ==========================================
+// 2. DOUBLE EXPONENTIAL LANDMARK SMOOTHER
+// ==========================================
+class HoltWintersSmoother {
+  constructor() {
+    this.history = { Left: null, Right: null };
+    this.alpha = 0.3;
+  }
+
+  setSmoothingFactor(val) {
+    this.alpha = 0.05 + (val / 100) * 0.70;
+  }
+
+  smooth(hand, rawMarks) {
+    if (!rawMarks || rawMarks.length !== 21) { this.history[hand] = null; return null; }
+    if (!this.history[hand]) {
+      this.history[hand] = rawMarks.map(pt => ({ x: pt.x, y: pt.y, z: pt.z, vx: 0, vy: 0, vz: 0 }));
+      return rawMarks;
+    }
+    const smoothed = [];
+    const prev = this.history[hand];
+    const a = this.alpha;
+    for (let i = 0; i < 21; i++) {
+      const r = rawMarks[i], p = prev[i];
+      const sx = p.x + a * (r.x - p.x);
+      const sy = p.y + a * (r.y - p.y);
+      const sz = p.z + a * (r.z - p.z);
+      smoothed.push({ x: sx, y: sy, z: sz, vx: sx - p.x, vy: sy - p.y, vz: sz - p.z });
+    }
+    this.history[hand] = smoothed;
+    return smoothed;
+  }
+}
+
+
+// ==========================================
+// 3. HARDWARE SIMULATOR
+// ==========================================
+class ArcaneHardwareSimulator {
+  constructor() {
+    this.active = true;
+    this.mouseX = window.innerWidth / 2;
+    this.mouseY = window.innerHeight / 2;
+    this.palmX = this.mouseX;
+    this.palmY = this.mouseY;
+    this.currentGesture = 'Open';
+
+    window.addEventListener('mousemove', (e) => { this.mouseX = e.clientX; this.mouseY = e.clientY; });
+
+    window.addEventListener('keydown', (e) => {
+      if (!this.active) return;
+      const key = e.key.toLowerCase();
+      if (e.key === ' ' || key === 'spacebar') { e.preventDefault(); this.currentGesture = 'Open'; }
+      else if (key === 'w') this.currentGesture = 'Pinch';
+      else if (key === 'l') this.currentGesture = 'Point';
+      else if (key === 'f') this.currentGesture = 'Fist';
+      else if (key === 't') this.currentGesture = 'Peace';
+      else if (key === 'p') this.currentGesture = 'Portal';
+      const item = document.querySelector(`.spell-item[data-spell="${this.getSpellFromGesture(this.currentGesture)}"]`);
+      if (item) item.click();
+    });
+  }
+
+  getSpellFromGesture(g) {
+    const map = { Open: 'shield', Pinch: 'whip', Point: 'lightning', Fist: 'fist', Peace: 'loop', Portal: 'portal' };
+    return map[g] || 'shield';
+  }
+
+  getHandLandmarks() {
+    const dx = this.mouseX - this.palmX;
+    const dy = this.mouseY - this.palmY;
+    this.palmX += dx * 0.15;
+    this.palmY += dy * 0.15;
+    const velocity = Math.sqrt(dx*dx + dy*dy) / 45;
+    const normCenter = { x: this.palmX / window.innerWidth, y: this.palmY / window.innerHeight, z: -0.1 + (velocity * 0.05) };
+    const wrist = { x: normCenter.x, y: normCenter.y + 0.15, z: normCenter.z, vx: dx/500, vy: dy/500, vz: 0 };
+    const marks = new Array(21);
+    marks[0] = wrist;
+    const g = this.currentGesture;
+    const isOpen = (g === 'Open' || g === 'Portal');
+    const isPinch = (g === 'Pinch');
+    const isPoint = (g === 'Point');
+    const isFist = (g === 'Fist');
+    const isPeace = (g === 'Peace');
+
+    const generateFinger = (startIndex, baseAngle, lengthScale, isOpenFinger) => {
+      const baseRad = baseAngle * Math.PI / 180;
+      const baseNode = { x: wrist.x + Math.sin(baseRad) * 0.06, y: wrist.y - Math.cos(baseRad) * 0.06, z: wrist.z - 0.02, vx: dx/600, vy: dy/600, vz: 0 };
+      marks[startIndex] = baseNode;
+      let nodeX = baseNode.x, nodeY = baseNode.y, nodeZ = baseNode.z;
+      const flexFactor = isOpenFinger ? 1.0 : -0.28;
+      for (let j = 1; j <= 3; j++) {
+        const rad = baseRad + (j * 0.05 * (isOpenFinger ? 1 : -2));
+        nodeX += Math.sin(rad) * 0.038 * lengthScale * flexFactor;
+        nodeY -= Math.cos(rad) * 0.038 * lengthScale * flexFactor;
+        nodeZ -= 0.01;
+        marks[startIndex + j] = { x: nodeX, y: nodeY, z: nodeZ, vx: dx/600, vy: dy/600, vz: 0 };
+      }
+    };
+
+    generateFinger(1, -38, 0.78, isOpen || isPoint || isPeace);
+    generateFinger(5, -15, 1.0, isOpen || isPoint || isPeace);
+    generateFinger(9, 2, 1.04, isOpen || isPeace);
+    generateFinger(13, 16, 0.98, isOpen);
+    generateFinger(17, 32, 0.82, isOpen);
+
+    if (isPinch) {
+      const midPoint = { x: (marks[4].x + marks[8].x) / 2, y: (marks[4].y + marks[8].y) / 2, z: (marks[4].z + marks[8].z) / 2 };
+      marks[4].x = marks[8].x = midPoint.x; marks[4].y = marks[8].y = midPoint.y; marks[4].z = marks[8].z = midPoint.z;
+    }
+
+    const landmarks = { Left: null, Right: null };
+    const gestures = { Left: { type: 'None', velocity: 0, palmCenter: null }, Right: { type: 'None', velocity: 0, palmCenter: null } };
+    const activeHand = (g === 'Portal') ? 'Left' : 'Right';
+    landmarks[activeHand] = marks;
+    gestures[activeHand] = { type: g, velocity, palmCenter: normCenter, yaw: 0.1, pitch: -0.15, roll: 0.05, indexTip: marks[8], thumbTip: marks[4] };
+
+    if (g === 'Portal') {
+      const rightMarks = marks.map(pt => ({ ...pt, x: pt.x + 0.35 }));
+      landmarks.Left = marks; landmarks.Right = rightMarks;
+      gestures.Left = { type: 'Portal', velocity, palmCenter: normCenter, indexTip: marks[8], thumbTip: marks[4] };
+      gestures.Right = { type: 'Portal', velocity, palmCenter: { x: normCenter.x + 0.35, y: normCenter.y, z: normCenter.z }, indexTip: rightMarks[8], thumbTip: rightMarks[4] };
+    }
+
+    return { landmarks, gestures };
+  }
+}
+
+const hardwareSimulator = new ArcaneHardwareSimulator();
+
+
+// ==========================================
+// 4. THREEJS DIMENSIONAL VIEWPORT
+// ==========================================
+class ArcaneThreeEngine {
+  constructor(container) {
+    this.container = container;
+    this.width = window.innerWidth;
+    this.height = window.innerHeight;
+    this.scene = new THREE.Scene();
+    this.camera = new THREE.PerspectiveCamera(65, this.width / this.height, 0.1, 1000);
+    this.camera.position.z = 6;
+    this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    this.renderer.setSize(this.width, this.height);
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.domElement.style.pointerEvents = 'none';
+    this.container.appendChild(this.renderer.domElement);
+    this.portalGroup = new THREE.Group();
+    this.portalGroup.position.set(0, 0, -2);
+    this.scene.add(this.portalGroup);
+    this.initPortalMesh();
+    window.addEventListener('resize', this.onResize.bind(this));
+  }
+
+  onResize() {
+    this.width = window.innerWidth; this.height = window.innerHeight;
+    this.renderer.setSize(this.width, this.height);
+    this.camera.aspect = this.width / this.height;
+    this.camera.updateProjectionMatrix();
+  }
+
+  initPortalMesh() {
+    const ringGeo = new THREE.TorusGeometry(1.8, 0.05, 12, 64);
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0x8b5cf6, transparent: true, opacity: 0.65, blending: THREE.AdditiveBlending });
+    this.portalRing1 = new THREE.Mesh(ringGeo, ringMat);
+    this.portalGroup.add(this.portalRing1);
+
+    const ringGeo2 = new THREE.TorusGeometry(1.85, 0.02, 8, 48);
+    const ringMat2 = new THREE.MeshBasicMaterial({ color: 0x00f2fe, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending });
+    this.portalRing2 = new THREE.Mesh(ringGeo2, ringMat2);
+    this.portalGroup.add(this.portalRing2);
+
+    const voidGeo = new THREE.CircleGeometry(1.78, 64);
+    const voidCanvas = document.createElement('canvas');
+    voidCanvas.width = 256; voidCanvas.height = 256;
+    const vCtx = voidCanvas.getContext('2d');
+    vCtx.fillStyle = '#020108'; vCtx.fillRect(0,0,256,256);
+    const radG = vCtx.createRadialGradient(128,128,20,128,128,125);
+    radG.addColorStop(0, 'rgba(139,92,246,0.22)'); radG.addColorStop(0.5, 'rgba(0,242,254,0.08)'); radG.addColorStop(1, 'rgba(0,0,0,0)');
+    vCtx.fillStyle = radG; vCtx.fillRect(0,0,256,256);
+    vCtx.fillStyle = '#ffffff';
+    for (let i = 0; i < 90; i++) { vCtx.globalAlpha = 0.2 + Math.random()*0.8; vCtx.fillRect(Math.random()*256, Math.random()*256, Math.random()*1.8, Math.random()*1.8); }
+    vCtx.globalAlpha = 1.0;
+    const voidTex = new THREE.CanvasTexture(voidCanvas);
+    const voidMat = new THREE.MeshBasicMaterial({ map: voidTex, transparent: true, opacity: 0.0 });
+    this.portalVoid = new THREE.Mesh(voidGeo, voidMat);
+    this.portalVoid.position.z = -0.02;
+    this.portalGroup.add(this.portalVoid);
+
+    this.particleCount = 750;
+    this.particleGeo = new THREE.BufferGeometry();
+    this.particlePositions = new Float32Array(this.particleCount * 3);
+    this.particleRadii = new Float32Array(this.particleCount);
+    this.particleAngles = new Float32Array(this.particleCount);
+    this.particleSpeed = new Float32Array(this.particleCount);
+
+    for (let i = 0; i < this.particleCount; i++) {
+      this.particleRadii[i] = 1.6 + Math.random() * 0.35;
+      this.particleAngles[i] = Math.random() * Math.PI * 2;
+      this.particleSpeed[i] = 0.01 + Math.random() * 0.025;
+      const x = Math.cos(this.particleAngles[i]) * this.particleRadii[i];
+      const y = Math.sin(this.particleAngles[i]) * this.particleRadii[i];
+      this.particlePositions[i*3] = x; this.particlePositions[i*3+1] = y; this.particlePositions[i*3+2] = (Math.random()-0.5)*0.6;
+    }
+
+    this.particleGeo.setAttribute('position', new THREE.BufferAttribute(this.particlePositions, 3));
+    const pCanvas = document.createElement('canvas');
+    pCanvas.width = 16; pCanvas.height = 16;
+    const pCtx = pCanvas.getContext('2d');
+    const gr = pCtx.createRadialGradient(8,8,0,8,8,8);
+    gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.3, 'rgba(139,92,246,0.9)'); gr.addColorStop(0.7, 'rgba(0,242,254,0.25)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    pCtx.fillStyle = gr; pCtx.fillRect(0,0,16,16);
+    const pTex = new THREE.CanvasTexture(pCanvas);
+    const pMat = new THREE.PointsMaterial({ size: 0.16, map: pTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.0 });
+    this.portalParticles = new THREE.Points(this.particleGeo, pMat);
+    this.portalGroup.add(this.portalParticles);
+  }
+
+  update(portalActive, scale, leftHand, rightHand) {
+    this.portalRing1.rotation.z += 0.008;
+    this.portalRing2.rotation.z -= 0.015;
+    const opacityTarget = portalActive ? 0.95 : 0.0;
+    this.portalVoid.material.opacity += (opacityTarget - this.portalVoid.material.opacity) * 0.12;
+    this.portalParticles.material.opacity += (opacityTarget - this.portalParticles.material.opacity) * 0.12;
+
+    if (portalActive && leftHand && rightHand) {
+      const midX = (leftHand.palmCenter.x + rightHand.palmCenter.x) / 2;
+      const midY = (leftHand.palmCenter.y + rightHand.palmCenter.y) / 2;
+      const target3DX = (midX - 0.5) * 8.5;
+      const target3DY = -(midY - 0.5) * 5.0;
+      this.portalGroup.position.x += (target3DX - this.portalGroup.position.x) * 0.12;
+      this.portalGroup.position.y += (target3DY - this.portalGroup.position.y) * 0.12;
+      const s = 0.4 + (scale * 1.5);
+      this.portalGroup.scale.set(s, s, s);
+      const dx = rightHand.palmCenter.x - leftHand.palmCenter.x;
+      const dy = rightHand.palmCenter.y - leftHand.palmCenter.y;
+      this.portalGroup.rotation.y = Math.atan2(dy, dx) * 0.15;
+    } else {
+      this.portalGroup.scale.x += (0.01 - this.portalGroup.scale.x) * 0.08;
+      this.portalGroup.scale.y += (0.01 - this.portalGroup.scale.y) * 0.08;
+      this.portalGroup.scale.z += (0.01 - this.portalGroup.scale.z) * 0.08;
+    }
+
+    const positions = this.portalParticles.geometry.attributes.position.array;
+    for (let i = 0; i < this.particleCount; i++) {
+      this.particleAngles[i] += this.particleSpeed[i] * (1.0 + scale * 2.0);
+      const rad = this.particleRadii[i], theta = this.particleAngles[i];
+      positions[i*3] = Math.cos(theta) * rad;
+      positions[i*3+1] = Math.sin(theta) * rad;
+      positions[i*3+2] += Math.sin(theta * 2) * 0.002;
+    }
+    this.portalParticles.geometry.attributes.position.needsUpdate = true;
+    this.renderer.render(this.scene, this.camera);
+  }
+}
+
+
+// ==========================================
+// 5. 2D VECTOR VFX OVERLAY RENDERER
+// ==========================================
+class ArcaneVFXOverlay {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d');
+    this.maxParticles = 3000;
+    this.particles = [];
+    this.initParticlePool();
+    this.width = window.innerWidth;
+    this.height = window.innerHeight;
+    this.shieldRotation = 0;
+    this.lightningCrackCount = 0;
+    this.shockwaves = [];
+    this.whipPoints = [];
+    this.fistChargeLevel = 0;
+    this.chronoAngle = 0;
+  }
+
+  resize() {
+    this.width = window.innerWidth; this.height = window.innerHeight;
+    this.canvas.width = this.width; this.canvas.height = this.height;
+  }
+
+  initParticlePool() {
+    this.particles = [];
+    for (let i = 0; i < this.maxParticles; i++) {
+      this.particles.push({ x: 0, y: 0, vx: 0, vy: 0, color: '', size: 0, life: 0, maxLife: 0, active: false });
+    }
+  }
+
+  spawnParticle(x, y, vx, vy, color, size, maxLife) {
+    for (let i = 0; i < this.maxParticles; i++) {
+      const p = this.particles[i];
+      if (!p.active) { p.active = true; p.x = x; p.y = y; p.vx = vx; p.vy = vy; p.color = color; p.size = size; p.life = maxLife; p.maxLife = maxLife; return; }
+    }
+  }
+
+  triggerShockwave(x, y, color) {
+    this.shockwaves.push({ x, y, radius: 5, maxRadius: 180 + Math.random() * 90, opacity: 1.0, color });
+  }
+
+  draw(landmarks, gestures) {
+    const ctx = this.ctx;
+    ctx.clearRect(0, 0, this.width, this.height);
+
+    for (let i = this.shockwaves.length - 1; i >= 0; i--) {
+      const s = this.shockwaves[i];
+      s.radius += (s.maxRadius - s.radius) * 0.08;
+      s.opacity -= 0.04;
+      if (s.opacity <= 0) { this.shockwaves.splice(i, 1); continue; }
+      ctx.save();
+      ctx.strokeStyle = s.color; ctx.lineWidth = 4 * s.opacity;
+      ctx.shadowBlur = 20; ctx.shadowColor = s.color;
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,' + (s.opacity * 0.3) + ')';
+      ctx.setLineDash([10, 20]);
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.radius * 1.15, 0, Math.PI * 2); ctx.stroke();
+      ctx.restore();
+    }
+
+    for (let i = 0; i < this.maxParticles; i++) {
+      const p = this.particles[i];
+      if (p.active) {
+        p.x += p.vx; p.y += p.vy; p.vy += 0.04; p.life--;
+        if (p.life <= 0) { p.active = false; continue; }
+        ctx.save();
+        ctx.fillStyle = p.color; ctx.shadowBlur = 10; ctx.shadowColor = p.color;
+        ctx.globalAlpha = p.life / p.maxLife;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    let activeParticlesCount = 0;
+    this.particles.forEach(p => { if (p.active) activeParticlesCount++; });
+    document.getElementById('hud-active-particles').innerText = `${activeParticlesCount} / ${this.maxParticles}`;
+
+    const hands = ['Left', 'Right'];
+    let handVectorsText = [];
+
+    hands.forEach(h => {
+      const rawMarks = landmarks[h];
+      const gest = gestures[h];
+      if (!rawMarks || !gest) return;
+
+      const pX = gest.palmCenter.x * this.width;
+      const pY = gest.palmCenter.y * this.height;
+      handVectorsText.push(`${h}: [X:${(gest.palmCenter.x*10).toFixed(1)}, Y:${(gest.palmCenter.y*10).toFixed(1)}]`);
+
+      if (Math.random() < 0.35) {
+        const randNode = rawMarks[Math.floor(Math.random() * 21)];
+        this.spawnParticle(randNode.x * this.width, randNode.y * this.height,
+          (Math.random()-0.5)*2, (Math.random()-0.5)*2 - 1,
+          h === 'Left' ? '#00f2fe' : '#f7b733', 1.5 + Math.random()*2, 20 + Math.floor(Math.random()*20));
+      }
+
+      // ELDRITCH SHIELD
+      if (gest.type === 'Open') {
+        audioManager.startShieldHum();
+        audioManager.updateShieldHum(gest.velocity);
+        this.shieldRotation += 0.008 + (gest.velocity * 0.02);
+        ctx.save();
+        ctx.translate(pX, pY); ctx.rotate(this.shieldRotation);
+        ctx.strokeStyle = 'rgba(0,242,254,0.85)'; ctx.shadowColor = '#00f2fe'; ctx.shadowBlur = 22; ctx.lineWidth = 1.8;
+        ctx.beginPath(); ctx.arc(0, 0, 110, 0, Math.PI * 2); ctx.stroke();
+        ctx.setLineDash([12, 18]);
+        ctx.beginPath(); ctx.arc(0, 0, 120, 0, Math.PI * 2); ctx.stroke();
+        ctx.setLineDash([0, 0]); ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.arc(0, 0, 85, 0, Math.PI * 2); ctx.stroke();
+        for (let s = 0; s < 8; s++) { ctx.rotate(Math.PI / 4); ctx.beginPath(); ctx.moveTo(0, -60); ctx.lineTo(0, -85); ctx.stroke(); }
+        ctx.strokeStyle = 'rgba(0,242,254,0.4)';
+        for (let sq = 0; sq < 3; sq++) { ctx.rotate(Math.PI / 6); ctx.strokeRect(-55, -55, 110, 110); }
+        ctx.restore();
+        for (let sp = 0; sp < 3; sp++) {
+          const rAngle = Math.random() * Math.PI * 2, rRadius = 90 + Math.random() * 30;
+          this.spawnParticle(pX + Math.cos(rAngle)*rRadius, pY + Math.sin(rAngle)*rRadius,
+            (Math.random()-0.5)*3 + (gest.velocity*4), (Math.random()-0.5)*3 - 0.5, '#00f2fe', 1.5+Math.random()*2, 30+Math.random()*30);
+        }
+      } else {
+        if (gestures.Left?.type !== 'Open' && gestures.Right?.type !== 'Open') audioManager.stopShieldHum();
+      }
+
+      // TAO WHIP
+      if (gest.type === 'Pinch') {
+        const pinchNodeX = gest.indexTip.x * this.width;
+        const pinchNodeY = gest.indexTip.y * this.height;
+        this.whipPoints.push({ x: pinchNodeX, y: pinchNodeY, age: 0 });
+        if (this.whipPoints.length > 35) this.whipPoints.shift();
+        if (gest.velocity > 0.08) audioManager.playWhipWhoosh(gest.velocity);
+        if (this.whipPoints.length > 2) {
+          ctx.save();
+          ctx.shadowBlur = 25; ctx.shadowColor = '#f7b733'; ctx.lineWidth = 3.5; ctx.strokeStyle = 'rgba(247,183,51,0.95)';
+          ctx.beginPath(); ctx.moveTo(this.whipPoints[0].x, this.whipPoints[0].y);
+          for (let p = 1; p < this.whipPoints.length; p++) {
+            const midX = (this.whipPoints[p-1].x + this.whipPoints[p].x) / 2;
+            const midY = (this.whipPoints[p-1].y + this.whipPoints[p].y) / 2;
+            ctx.quadraticCurveTo(this.whipPoints[p-1].x, this.whipPoints[p-1].y, midX, midY);
+          }
+          ctx.stroke(); ctx.restore();
+          if (Math.random() < 0.8) {
+            const lastPt = this.whipPoints[this.whipPoints.length - 1];
+            this.spawnParticle(lastPt.x, lastPt.y, (Math.random()-0.5)*6, (Math.random()-0.5)*6-1.5, '#f7b733', 2+Math.random()*3, 35);
+          }
+        }
+      } else {
+        if (this.whipPoints.length > 0) this.whipPoints.shift();
+      }
+
+      // TESLA LIGHTNING
+      if (gest.type === 'Point') {
+        const fingerTipX = gest.indexTip.x * this.width;
+        const fingerTipY = gest.indexTip.y * this.height;
+        this.lightningCrackCount++;
+        if (this.lightningCrackCount % 8 === 0) audioManager.playLightningCrackle();
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255,255,255,0.98)'; ctx.shadowColor = '#00f2fe'; ctx.shadowBlur = 30; ctx.lineWidth = 2.5;
+        const drawLightningBolt = (startX, startY, endX, endY, segments) => {
+          ctx.beginPath(); ctx.moveTo(startX, startY);
+          let currX = startX, currY = startY;
+          for (let seg = 1; seg <= segments; seg++) {
+            const t = seg / segments;
+            const targetX = startX + (endX - startX) * t;
+            const targetY = startY + (endY - startY) * t;
+            const jitter = (1 - t) * 35;
+            const x = targetX + (Math.random()-0.5) * jitter;
+            const y = targetY + (Math.random()-0.5) * jitter;
+            ctx.lineTo(x, y); currX = x; currY = y;
+            if (Math.random() < 0.16 && seg < segments - 1) {
+              ctx.save(); ctx.lineWidth = 1.0; ctx.strokeStyle = 'rgba(0,242,254,0.7)';
+              ctx.beginPath(); ctx.moveTo(currX, currY);
+              ctx.lineTo(currX + (Math.random()-0.5)*80, currY + (Math.random()-0.5)*80 + 30);
+              ctx.stroke(); ctx.restore();
+            }
+          }
+          ctx.lineTo(endX, endY); ctx.stroke();
+        };
+        const targetX = this.width / 2 + Math.sin(Date.now() / 400) * 180;
+        const targetY = this.height / 2 + Math.cos(Date.now() / 400) * 100;
+        drawLightningBolt(fingerTipX, fingerTipY, targetX, targetY, 15);
+        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(targetX, targetY, 6, 0, Math.PI*2); ctx.fill();
+        ctx.restore();
+        for (let sp = 0; sp < 2; sp++) {
+          this.spawnParticle(targetX, targetY, (Math.random()-0.5)*8, (Math.random()-0.5)*8-2, 'rgba(0,242,254,0.9)', 1.5+Math.random()*2, 20);
+        }
+      }
+
+      // SINGULARITY FIST
+      if (gest.type === 'Fist') {
+        if (this.fistChargeLevel === 0) audioManager.startFistCharge();
+        this.fistChargeLevel += 0.008;
+        if (this.fistChargeLevel > 1.0) this.fistChargeLevel = 1.0;
+        audioManager.updateFistCharge(this.fistChargeLevel);
+        ctx.save();
+        ctx.shadowColor = '#ff416c'; ctx.shadowBlur = 15 + this.fistChargeLevel * 30;
+        ctx.strokeStyle = 'rgba(255,65,108,' + (0.4 + this.fistChargeLevel * 0.6) + ')'; ctx.lineWidth = 2.0;
+        const rings = 4;
+        for (let r = 0; r < rings; r++) {
+          const rotation = Date.now() / 200 * (r+1) * 0.15;
+          const radius = (60 - (Date.now() / 8 % 60) + (r * 15)) * (1.0 - this.fistChargeLevel * 0.3);
+          if (radius > 10) { ctx.beginPath(); ctx.arc(pX, pY, radius, rotation, rotation + Math.PI * 1.5); ctx.stroke(); }
+        }
+        const coreRad = 15 + this.fistChargeLevel * 25;
+        const radGrad = ctx.createRadialGradient(pX, pY, 0, pX, pY, coreRad);
+        radGrad.addColorStop(0, '#fff'); radGrad.addColorStop(0.3, 'rgba(255,65,108,0.9)'); radGrad.addColorStop(1, 'rgba(255,65,108,0)');
+        ctx.fillStyle = radGrad; ctx.beginPath(); ctx.arc(pX, pY, coreRad, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+        if (Math.random() < 0.75) {
+          const pAngle = Math.random() * Math.PI * 2, pDist = 80 + Math.random() * 60;
+          const dustX = pX + Math.cos(pAngle) * pDist, dustY = pY + Math.sin(pAngle) * pDist;
+          this.spawnParticle(dustX, dustY, -Math.cos(pAngle)*(3+this.fistChargeLevel*4), -Math.sin(pAngle)*(3+this.fistChargeLevel*4), '#ff416c', 1.5+Math.random()*2, 20);
+        }
+      } else {
+        if (this.fistChargeLevel > 0.12) {
+          audioManager.detonateFistCharge();
+          this.triggerShockwave(pX, pY, '#ff416c');
+          for (let bp = 0; bp < 45; bp++) {
+            const force = 3 + Math.random() * 10, fRad = Math.random() * Math.PI * 2;
+            this.spawnParticle(pX, pY, Math.cos(fRad)*force, Math.sin(fRad)*force-2, bp%2===0 ? '#ff416c' : '#fff', 2+Math.random()*3, 40+Math.random()*20);
+          }
+        }
+        this.fistChargeLevel = 0;
+      }
+
+      // CHRONO RING
+      if (gest.type === 'Peace') {
+        this.chronoAngle += 0.007;
+        const nowSec = Math.floor(Date.now() / 1000);
+        if (this.lastTickSec !== nowSec) {
+          audioManager.playChronoTick();
+          this.lastTickSec = nowSec;
+          this.triggerShockwave(pX, pY, 'rgba(0,176,155,0.4)');
+        }
+        ctx.save();
+        ctx.translate(pX, pY); ctx.rotate(this.chronoAngle);
+        ctx.shadowColor = '#00b09b'; ctx.shadowBlur = 18;
+        ctx.strokeStyle = 'rgba(0,176,155,0.9)'; ctx.lineWidth = 1.8;
+        ctx.beginPath(); ctx.arc(0, 0, 100, 0, Math.PI * 2); ctx.stroke();
+        ctx.strokeStyle = 'rgba(0,176,155,0.4)';
+        ctx.beginPath(); ctx.arc(0, 0, 85, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(0, 0, 50, 0, Math.PI * 2); ctx.stroke();
+        ctx.strokeStyle = 'rgba(0,176,155,0.8)';
+        for (let tick = 0; tick < 12; tick++) { ctx.rotate(Math.PI / 6); ctx.beginPath(); ctx.moveTo(0, -90); ctx.lineTo(0, -100); ctx.stroke(); }
+        ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.font = '7px Outfit'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText("XII", 0, -78); ctx.fillText("III", 78, 0); ctx.fillText("VI", 0, 78); ctx.fillText("IX", -78, 0);
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0, -45); ctx.stroke();
+        ctx.lineWidth = 1.5; ctx.rotate(Math.PI * 0.6);
+        ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0, -65); ctx.stroke();
+        ctx.restore();
+      }
+
+      // SKELETON OVERLAY
+      ctx.save();
+      ctx.strokeStyle = h === 'Left' ? 'rgba(0,242,254,0.28)' : 'rgba(247,183,51,0.28)';
+      ctx.lineWidth = 1.8; ctx.shadowColor = h === 'Left' ? '#00f2fe' : '#f7b733'; ctx.shadowBlur = 6;
+      const drawBoneLine = (n1, n2) => {
+        const pt1 = rawMarks[n1], pt2 = rawMarks[n2];
+        ctx.beginPath(); ctx.moveTo(pt1.x*this.width, pt1.y*this.height); ctx.lineTo(pt2.x*this.width, pt2.y*this.height); ctx.stroke();
+      };
+      drawBoneLine(0,1); drawBoneLine(1,2); drawBoneLine(2,3); drawBoneLine(3,4);
+      drawBoneLine(0,5); drawBoneLine(5,6); drawBoneLine(6,7); drawBoneLine(7,8);
+      drawBoneLine(5,9); drawBoneLine(9,10); drawBoneLine(10,11); drawBoneLine(11,12);
+      drawBoneLine(9,13); drawBoneLine(13,14); drawBoneLine(14,15); drawBoneLine(15,16);
+      drawBoneLine(13,17); drawBoneLine(17,18); drawBoneLine(18,19); drawBoneLine(19,20);
+      drawBoneLine(0,17);
+      rawMarks.forEach((node, idx) => {
+        ctx.fillStyle = h === 'Left' ? 'rgba(0,242,254,0.85)' : 'rgba(247,183,51,0.85)';
+        if (idx === 4 || idx === 8 || idx === 12 || idx === 16 || idx === 20) ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(node.x*this.width, node.y*this.height, idx === 0 ? 4.5 : 2.5, 0, Math.PI*2); ctx.fill();
+      });
+      ctx.restore();
+    });
+
+    if (handVectorsText.length > 0) {
+      document.getElementById('hud-hand-vectors').innerText = handVectorsText.join(' | ');
+    } else {
+      document.getElementById('hud-hand-vectors').innerText = "No Tracking Frame";
+    }
+  }
+}
+
+
+// ==========================================
+// 6. MAIN ENGINE CONTROLLER
+// ==========================================
+class ArcaneEngine {
+  constructor() {
+    this.bootProgress = 0;
+    this.fps = 60;
+    this.lastFrameTime = performance.now();
+    this.frameCount = 0;
+    this.isCameraActive = false;
+    this.isVideoVisible = false;
+
+    this.loadingScreen = document.getElementById('loading-screen');
+    this.terminal = document.getElementById('loader-terminal');
+    this.startBtn = document.getElementById('start-btn');
+    this.vfxCanvas = document.getElementById('vfx-canvas');
+    this.threeContainer = document.getElementById('three-container');
+
+    this.smoother = new HoltWintersSmoother();
+    this.threeEngine = new ArcaneThreeEngine(this.threeContainer);
+    this.vfxOverlay = new ArcaneVFXOverlay(this.vfxCanvas);
+
+    this.bootSequence();
+    this.bindControls();
+    this.tick();
+
+    document.getElementById('scroller-trigger').addEventListener('click', () => {
+      document.getElementById('specifications-section').scrollIntoView({ behavior: 'smooth' });
+    });
+  }
+
+  appendLog(text, type = '') {
+    const line = document.createElement('div');
+    line.className = `terminal-line ${type}`;
+    line.innerHTML = `<span>[${new Date().toLocaleTimeString()}]</span> <span>${text}</span>`;
+    this.terminal.appendChild(line);
+    this.terminal.scrollTop = this.terminal.scrollHeight;
+  }
+
+  async bootSequence() {
+    const steps = [
+      { text: "Verifying WebGL 2.0 Graphics acceleration...", delay: 400, type: "info" },
+      { text: "Shader Pipeline compiled: eldritch_shield.frag [OK]", delay: 350, type: "success" },
+      { text: "Shader Pipeline compiled: portal_cosmo_void.vert [OK]", delay: 300, type: "success" },
+      { text: "Audio Context mapping Detuned Sawtooth oscillator...", delay: 450, type: "info" },
+      { text: "Biomechanical Holt-Winters Smoother initialized...", delay: 350, type: "info" },
+      { text: "Vector gesture maps configured: Space / Pinch / Fist / Chrono...", delay: 400, type: "info" },
+      { text: "Cognitive feedback loops connected.", delay: 300, type: "success" }
+    ];
+    for (let s of steps) {
+      await new Promise(res => setTimeout(res, s.delay));
+      this.appendLog(s.text, s.type);
+    }
+    this.startBtn.classList.remove('hidden-element');
+    this.startBtn.addEventListener('click', () => {
+      audioManager.init();
+      audioManager.resume();
+      this.loadingScreen.classList.add('hidden');
+      this.vfxOverlay.triggerShockwave(window.innerWidth / 2, window.innerHeight / 2, '#00f2fe');
+    });
+  }
+
+  bindControls() {
+    const volumeSlider = document.getElementById('volume-control');
+    volumeSlider.addEventListener('input', (e) => { document.getElementById('volume-val').innerText = `${e.target.value}%`; audioManager.setVolume(e.target.value); });
+
+    const smoothSlider = document.getElementById('smoothing-control');
+    smoothSlider.addEventListener('input', (e) => { document.getElementById('smoothing-val').innerText = `${e.target.value}%`; this.smoother.setSmoothingFactor(e.target.value); });
+
+    const particlesSlider = document.getElementById('particles-control');
+    particlesSlider.addEventListener('input', (e) => { document.getElementById('particles-val').innerText = e.target.value; this.vfxOverlay.maxParticles = parseInt(e.target.value); this.vfxOverlay.initParticlePool(); });
+
+    const soundBtn = document.getElementById('sound-btn');
+    soundBtn.addEventListener('click', () => {
+      const isMuted = audioManager.toggleMute();
+      soundBtn.classList.toggle('active', isMuted);
+      soundBtn.innerText = isMuted ? "Unmute Synth" : "Mute Synth";
+    });
+
+    document.getElementById('toggle-camera-btn').addEventListener('click', () => { this.initMediaPipeCamera(); });
+
+    const visibilityBtn = document.getElementById('toggle-webcam-visibility');
+    const outputCanvas = document.getElementById('output-canvas');
+    visibilityBtn.addEventListener('click', () => {
+      this.isVideoVisible = !this.isVideoVisible;
+      outputCanvas.classList.toggle('hidden', !this.isVideoVisible);
+      visibilityBtn.classList.toggle('active', this.isVideoVisible);
+      visibilityBtn.innerText = this.isVideoVisible ? "Hide Feed" : "Show Feed";
+    });
+
+    const fsBtn = document.getElementById('fullscreen-btn');
+    fsBtn.addEventListener('click', () => {
+      if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); fsBtn.innerText = "Exit FS"; }
+      else { document.exitFullscreen(); fsBtn.innerText = "Fullscreen"; }
+    });
+
+    const spells = document.querySelectorAll('.spell-item');
+    spells.forEach(item => {
+      item.addEventListener('click', () => {
+        spells.forEach(s => { s.classList.remove('active'); const b = s.querySelector('.spell-status-tag'); if (b) b.innerText = "READY"; });
+        item.classList.add('active');
+        const badge = item.querySelector('.spell-status-tag');
+        if (badge) badge.innerText = "ACTIVE";
+        const spellType = item.getAttribute('data-spell');
+        hardwareSimulator.currentGesture = this.getGestureFromSpell(spellType);
+        this.updateFeedbackInstructions(spellType);
+        const leftSidebar = document.getElementById('spellbook-codex');
+        const rightSidebar = document.getElementById('telemetry-matrix');
+        leftSidebar.className = "glass-panel panel-left-sidebar";
+        rightSidebar.className = "glass-panel panel-right-sidebar";
+        const colorMap = { shield: 'active-glow-cyan', whip: 'active-glow-gold', lightning: 'active-glow-cyan', fist: 'active-glow-red', loop: 'active-glow-green', portal: 'active-glow-portal' };
+        leftSidebar.classList.add(colorMap[spellType]);
+        rightSidebar.classList.add(colorMap[spellType]);
+      });
+    });
+  }
+
+  getGestureFromSpell(spell) {
+    const map = { shield: 'Open', whip: 'Pinch', lightning: 'Point', fist: 'Fist', loop: 'Peace', portal: 'Portal' };
+    return map[spell] || 'Open';
+  }
+
+  updateFeedbackInstructions(spell) {
+    const texts = {
+      shield: "Eldritch Shield active. Form an open palm gesture to project concentric rotating mandalas.",
+      whip: "Tao Energy Whip active. Pinch thumb and index together, sweeping hand rapidly to generate energy trails.",
+      lightning: "Tesla Arc Bolt active. Point index finger to crackle branched electrical bolts towards screen node targets.",
+      fist: "Singularity Fist active. Clench your hand into a tight fist to accumulate vacuum vortex power, release it to detonate shockwaves.",
+      loop: "Temporal Chrono-Ring active. Frame a peace sign to tick holographic green gear clocks in real-time.",
+      portal: "Sling Portal Gate active. Raise dual open hands to spin WebGL volumetric stars and dimensional portals between your palms."
+    };
+    document.getElementById('live-feedback').innerText = texts[spell] || "Select a spell from the codex sidebar.";
+  }
+
+  async initMediaPipeCamera() {
+    if (this.isCameraActive) return;
+    this.appendLog("Requesting local media hardware streams...", "info");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } });
+      const videoElement = document.getElementById('input-video');
+      videoElement.srcObject = stream;
+      this.isCameraActive = true;
+      hardwareSimulator.active = false;
+      document.getElementById('toggle-camera-btn').innerText = "Camera Active";
+      document.getElementById('toggle-camera-btn').classList.add('active');
+      document.getElementById('output-canvas').classList.remove('hidden');
+      this.isVideoVisible = true;
+      document.getElementById('toggle-webcam-visibility').classList.add('active');
+      document.getElementById('tracking-badge').classList.add('active');
+      document.getElementById('tracking-text').innerText = "TRACKING: AI HANDS";
+      this.appendLog("Camera connection established.", "success");
+      this.appendLog("Downloading MediaPipe Hands WASM files...", "info");
+
+      const hands = new Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
+      hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.72, minTrackingConfidence: 0.72 });
+      hands.onResults((results) => { this.onTrackingResults(results); });
+
+      const camera = new Camera(videoElement, {
+        onFrame: async () => { await hands.send({ image: videoElement }); },
+        width: 1280, height: 720
+      });
+      camera.start();
+      this.appendLog("MediaPipe skeletal neural classification engine: ONLINE.", "success");
+    } catch (err) {
+      console.warn("Camera failed:", err);
+      this.appendLog("Webcam hardware access denied or offline.", "warning");
+      this.appendLog("Continuing in Interactive Hardware Simulator Mode.", "info");
+    }
+  }
+
+  onTrackingResults(results) {
+    const canvas = document.getElementById('output-canvas');
+    const ctx = canvas.getContext('2d');
+    if (canvas.width !== results.image.width) { canvas.width = results.image.width; canvas.height = results.image.height; }
+    ctx.save(); ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.translate(canvas.width, 0); ctx.scale(-1, 1);
+    ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+    ctx.restore();
+
+    const landmarks = { Left: null, Right: null };
+    const gestures = { Left: { type: 'None', velocity: 0, palmCenter: null }, Right: { type: 'None', velocity: 0, palmCenter: null } };
+
+    if (results.multiHandLandmarks && results.multiHandedness) {
+      for (let i = 0; i < results.multiHandLandmarks.length; i++) {
+        const rawMarks = results.multiHandLandmarks[i];
+        const handedness = results.multiHandedness[i];
+        const hand = handedness.label === 'Left' ? 'Right' : 'Left';
+        const smoothed = this.smoother.smooth(hand, rawMarks);
+        if (smoothed) { landmarks[hand] = smoothed; gestures[hand] = this.classifyRealHandGesture(smoothed); }
+      }
+    } else { this.smoother.smooth('Left', null); this.smoother.smooth('Right', null); }
+
+    this.latestTrackedLandmarks = landmarks;
+    this.latestTrackedGestures = gestures;
+  }
+
+  classifyRealHandGesture(marks) {
+    const wrist = marks[0], indexBase = marks[5], pinkyBase = marks[17];
+    const palmCenter = { x: (wrist.x+indexBase.x+pinkyBase.x)/3, y: (wrist.y+indexBase.y+pinkyBase.y)/3, z: (wrist.z+indexBase.z+pinkyBase.z)/3 };
+    const isIndexOpen = marks[8].y < marks[6].y;
+    const isMiddleOpen = marks[12].y < marks[10].y;
+    const isRingOpen = marks[16].y < marks[14].y;
+    const isPinkyOpen = marks[20].y < marks[18].y;
+    const pinchDist = Math.sqrt(Math.pow(marks[4].x-marks[8].x,2) + Math.pow(marks[4].y-marks[8].y,2));
+    let type = 'None';
+    if (isIndexOpen && isMiddleOpen && isRingOpen && isPinkyOpen) type = 'Open';
+    else if (isIndexOpen && isMiddleOpen && !isRingOpen && !isPinkyOpen) type = 'Peace';
+    else if (isIndexOpen && !isMiddleOpen && !isRingOpen && !isPinkyOpen) type = 'Point';
+    else if (pinchDist < 0.05 && !isMiddleOpen && !isRingOpen && !isPinkyOpen) type = 'Pinch';
+    else if (!isIndexOpen && !isMiddleOpen && !isRingOpen && !isPinkyOpen) type = 'Fist';
+    let vel = 0;
+    marks.forEach(pt => { vel += Math.sqrt(pt.vx*pt.vx + pt.vy*pt.vy + pt.vz*pt.vz); });
+    const velocity = vel / 21;
+    if (this.latestTrackedGestures?.Left?.type === 'Open' && this.latestTrackedGestures?.Right?.type === 'Open') {
+      if (this.latestTrackedGestures.Left) this.latestTrackedGestures.Left.type = 'Portal';
+      if (this.latestTrackedGestures.Right) this.latestTrackedGestures.Right.type = 'Portal';
+      type = 'Portal';
+    }
+    if (type !== 'None') {
+      const activeSpell = this.getGestureFromSpell(type) === type ? type : null;
+      const spellName = { Open: 'shield', Pinch: 'whip', Point: 'lightning', Fist: 'fist', Peace: 'loop', Portal: 'portal' }[type];
+      if (spellName) {
+        const item = document.querySelector(`.spell-item[data-spell="${spellName}"]`);
+        if (item && !item.classList.contains('active')) item.click();
+      }
+    }
+    return { type, velocity, palmCenter, indexTip: marks[8], thumbTip: marks[4] };
+  }
+
+  tick() {
+    requestAnimationFrame(this.tick.bind(this));
+    const now = performance.now();
+    const dt = now - this.lastFrameTime;
+    this.frameCount++;
+    if (dt >= 1000) {
+      this.fps = Math.round((this.frameCount * 1000) / dt);
+      document.getElementById('hud-frame-time').innerText = `${(dt / this.frameCount).toFixed(1)}ms (${this.fps} FPS)`;
+      this.frameCount = 0; this.lastFrameTime = now;
+    }
+    this.vfxOverlay.resize();
+    let landmarks, gestures;
+    if (this.isCameraActive && this.latestTrackedLandmarks) {
+      landmarks = this.latestTrackedLandmarks; gestures = this.latestTrackedGestures;
+    } else {
+      const sim = hardwareSimulator.getHandLandmarks();
+      landmarks = sim.landmarks; gestures = sim.gestures;
+    }
+    const leftG = gestures.Left, rightG = gestures.Right;
+    const isPortalActive = (leftG && rightG && leftG.type === 'Portal' && rightG.type === 'Portal');
+    if (isPortalActive) {
+      audioManager.startPortalSound();
+      const dx = rightG.palmCenter.x - leftG.palmCenter.x;
+      const dy = rightG.palmCenter.y - leftG.palmCenter.y;
+      audioManager.updatePortalSound(Math.sqrt(dx*dx + dy*dy));
+    } else { audioManager.stopPortalSound(); }
+    audioManager.updateAmbientDrone(Math.max(leftG?.velocity || 0, rightG?.velocity || 0));
+    const spacing = isPortalActive ? Math.sqrt(Math.pow(rightG.palmCenter.x-leftG.palmCenter.x,2) + Math.pow(rightG.palmCenter.y-leftG.palmCenter.y,2)) : 0;
+    this.threeEngine.update(isPortalActive, spacing, leftG, rightG);
+    this.vfxOverlay.draw(landmarks, gestures);
+    document.getElementById('hud-velocity').innerText = `${(Math.max(leftG?.velocity||0, rightG?.velocity||0) * 100).toFixed(2)} px/sec`;
+    const reticle = document.getElementById('calibration-reticle');
+    if (leftG || rightG) reticle.classList.add('faded'); else reticle.classList.remove('faded');
+  }
+}
+
+
+// ==========================================
+// 7. SPECIFICATIONS INTERACTIVE CANVASES
+// ==========================================
+class SpecificationsInspectors {
+  constructor() {
+    this.initHandSchematic();
+    this.initShaderPreview();
+    this.initMathGraph();
+  }
+
+  initHandSchematic() {
+    const canvas = document.getElementById('hand-schematic-canvas');
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width = 450, h = canvas.height = 380;
+    const jointLabels = {
+      0: { name: "Index 0 - Wrist Base", desc: "Translational palm coordinates center" },
+      4: { name: "Index 4 - Thumb Apex", desc: "Monitors hand contraction width parameters" },
+      8: { name: "Index 8 - Index Tip", desc: "Primary vector pointer for Tesla Lightning arcs" },
+      12: { name: "Index 12 - Middle Tip", desc: "Chronology trigger multiplier" },
+      16: { name: "Index 16 - Ring Tip", desc: "Monitors concentric perimeter ratios" },
+      20: { name: "Index 20 - Pinky Tip", desc: "Computes boundary rotation bounds" }
+    };
+    const nodes = [
+      { id: 0, x: 220, y: 320 },
+      { id: 1, x: 140, y: 280 }, { id: 2, x: 100, y: 240 }, { id: 3, x: 80, y: 200 }, { id: 4, x: 60, y: 160 },
+      { id: 5, x: 160, y: 170 }, { id: 6, x: 140, y: 120 }, { id: 7, x: 130, y: 90 }, { id: 8, x: 120, y: 60 },
+      { id: 9, x: 210, y: 160 }, { id: 10, x: 205, y: 105 }, { id: 11, x: 200, y: 70 }, { id: 12, x: 195, y: 35 },
+      { id: 13, x: 260, y: 170 }, { id: 14, x: 265, y: 115 }, { id: 15, x: 270, y: 80 }, { id: 16, x: 275, y: 45 },
+      { id: 17, x: 310, y: 190 }, { id: 18, x: 325, y: 145 }, { id: 19, x: 335, y: 115 }, { id: 20, x: 345, y: 85 }
+    ];
+    let hoveredNode = null;
+    const draw = () => {
+      ctx.clearRect(0,0,w,h);
+      ctx.strokeStyle = 'rgba(255,255,255,0.02)'; ctx.lineWidth = 1;
+      for (let i = 0; i < w; i += 20) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,h); ctx.stroke(); }
+      for (let j = 0; j < h; j += 20) { ctx.beginPath(); ctx.moveTo(0,j); ctx.lineTo(w,j); ctx.stroke(); }
+      ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 2.0;
+      const link = (n1, n2) => { ctx.beginPath(); ctx.moveTo(nodes[n1].x, nodes[n1].y); ctx.lineTo(nodes[n2].x, nodes[n2].y); ctx.stroke(); };
+      link(0,1); link(1,2); link(2,3); link(3,4);
+      link(0,5); link(5,6); link(6,7); link(7,8);
+      link(5,9); link(9,10); link(10,11); link(11,12);
+      link(9,13); link(13,14); link(14,15); link(15,16);
+      link(13,17); link(17,18); link(18,19); link(19,20);
+      link(0,17);
+      nodes.forEach(n => {
+        const isHovered = hoveredNode && hoveredNode.id === n.id;
+        const isKeyJoint = jointLabels[n.id];
+        ctx.save();
+        ctx.fillStyle = isKeyJoint ? '#00f2fe' : 'rgba(255,255,255,0.4)';
+        if (isHovered) { ctx.fillStyle = '#fff'; ctx.shadowColor = '#00f2fe'; ctx.shadowBlur = 15; ctx.beginPath(); ctx.arc(n.x, n.y, 8, 0, Math.PI*2); ctx.fill(); }
+        else { ctx.beginPath(); ctx.arc(n.x, n.y, isKeyJoint ? 5 : 3.5, 0, Math.PI*2); ctx.fill(); }
+        ctx.restore();
+      });
+    };
+    canvas.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const mX = (e.clientX - rect.left) * (w / rect.width);
+      const mY = (e.clientY - rect.top) * (h / rect.height);
+      let found = null;
+      for (let n of nodes) { const dist = Math.sqrt(Math.pow(n.x-mX,2) + Math.pow(n.y-mY,2)); if (dist < 10) { found = n; break; } }
+      if (found) {
+        hoveredNode = found;
+        const detail = jointLabels[found.id] || { name: `Index ${found.id} Knuckle Joint`, desc: "Intermediate kinematic vector bone connection" };
+        document.getElementById('inspected-node-name').innerText = detail.name;
+        document.getElementById('inspected-node-purpose').innerText = detail.desc;
+        canvas.style.cursor = 'pointer';
+      } else { hoveredNode = null; canvas.style.cursor = 'default'; }
+      draw();
+    });
+    draw();
+  }
+
+  initShaderPreview() {
+    const canvas = document.getElementById('shader-preview-canvas');
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width = 400, h = canvas.height = 250;
+    let time = 0;
+    const animate = () => {
+      requestAnimationFrame(animate);
+      time += 0.04;
+      const imgData = ctx.createImageData(w, h);
+      const data = imgData.data;
+      for (let y = 0; y < h; y += 2) {
+        for (let x = 0; x < w; x += 2) {
+          const uvX = x / w - 0.5, uvY = (y / h - 0.5) * (h / w);
+          const r = Math.sqrt(uvX*uvX + uvY*uvY) * 2.2;
+          const theta = Math.atan2(uvY, uvX);
+          const wave = Math.sin(r * 32.0 - time * 4.0);
+          const spokes = Math.sin(theta * 6.0 + time * 1.5);
+          const intensity = Math.max(0, wave * spokes);
+          const glow = Math.floor(intensity * 255);
+          for (let dy = 0; dy < 2; dy++) {
+            for (let dx = 0; dx < 2; dx++) {
+              const pixelIdx = ((y+dy)*w + (x+dx)) * 4;
+              if (pixelIdx < data.length) {
+                data[pixelIdx] = 0; data[pixelIdx+1] = Math.floor(glow*0.88); data[pixelIdx+2] = glow;
+                data[pixelIdx+3] = glow > 15 ? glow : 10;
+              }
+            }
+          }
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+      ctx.strokeStyle = 'rgba(0,242,254,0.25)'; ctx.lineWidth = 1.0;
+      ctx.beginPath(); ctx.arc(w/2, h/2, 45 + Math.sin(time)*5, 0, Math.PI*2); ctx.stroke();
+    };
+    animate();
+  }
+
+  initMathGraph() {
+    const canvas = document.getElementById('smoothing-graph-canvas');
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width = 400, h = canvas.height = 250;
+    let pointsCount = 45, rawPoints = [], smoothPoints = [], time = 0;
+    const jitterControl = document.getElementById('jitter-control');
+    document.getElementById('jitter-val').innerText = `${jitterControl.value}px`;
+    jitterControl.addEventListener('input', (e) => { document.getElementById('jitter-val').innerText = `${e.target.value}px`; });
+    for (let i = 0; i < pointsCount; i++) { const a = (i/pointsCount)*Math.PI*2.5, b = h/2 + Math.sin(a)*55; rawPoints.push(b); smoothPoints.push(b); }
+    const animate = () => {
+      requestAnimationFrame(animate);
+      time += 0.05;
+      const jitterLimit = parseFloat(jitterControl.value);
+      const baseNextVal = h/2 + Math.sin(time*0.8)*50 + Math.cos(time*2.0)*15;
+      const rawNext = baseNextVal + (Math.random()-0.5)*jitterLimit;
+      const lastSmooth = smoothPoints[smoothPoints.length-1];
+      const smoothNext = lastSmooth + 0.16 * (rawNext - lastSmooth);
+      rawPoints.push(rawNext); smoothPoints.push(smoothNext);
+      if (rawPoints.length > pointsCount) { rawPoints.shift(); smoothPoints.shift(); }
+      ctx.clearRect(0,0,w,h);
+      ctx.strokeStyle = 'rgba(255,255,255,0.03)'; ctx.lineWidth = 1;
+      for (let x = 0; x < w; x += 30) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+      for (let y = 0; y < h; y += 30) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+      const drawGraphLine = (arr, color, isGlow) => {
+        ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = isGlow ? 3.0 : 1.2;
+        if (isGlow) { ctx.shadowColor = color; ctx.shadowBlur = 14; }
+        ctx.beginPath();
+        const spacingX = w / (pointsCount - 1);
+        ctx.moveTo(0, arr[0]);
+        for (let i = 1; i < arr.length; i++) ctx.lineTo(i * spacingX, arr[i]);
+        ctx.stroke(); ctx.restore();
+      };
+      drawGraphLine(rawPoints, 'rgba(255,65,108,0.45)', false);
+      drawGraphLine(smoothPoints, '#00f2fe', true);
+      ctx.fillStyle = 'rgba(255,65,108,0.95)'; ctx.font = '8px monospace'; ctx.fillText("■ RAW BIOMETRIC STREAM", 15, 20);
+      ctx.fillStyle = 'rgba(0,242,254,0.95)'; ctx.fillText("■ HOLT-WINTERS SMOOTHED", 15, 34);
+    };
+    animate();
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  window.arcaneEngine = new ArcaneEngine();
+  window.inspectors = new SpecificationsInspectors();
+});
+</script>
+</body>
+</html>
